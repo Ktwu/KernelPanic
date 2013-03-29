@@ -24,6 +24,7 @@ Crafty.scene(R.Scene.game, function() {
 	Game.KernelPanic = Crafty.e('KernelPanic'); 
 	
 	var graph = Crafty.e('GameGraph, Center').loadGraph(testLevel).makeUndirected()
+		.attr({lineWidth: 5})
 		.centerOnX(Crafty.canvas._canvas.width/2);
 		
 	var player = Crafty.e('Player, Ellipse')
@@ -46,7 +47,7 @@ Crafty.scene(R.Scene.game, function() {
 		function(data) {
 			var ctx = data.ctx;
 		
-			ctx.lineWidth = 10;
+			ctx.lineWidth = Game.graph.lineWidth;
 			ctx.strokeStyle = "#00FF00";
 			ctx.beginPath();
 		

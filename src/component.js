@@ -542,6 +542,7 @@ Crafty.c('Graph', {
 	init: function() {
 		this.requires('CustomDraw')
 		.bind("Draw", this._graph_draw)
+		.bind("Change", this._graph_change)
 		.attr({
 			x: 0,
 			y: 0,
@@ -551,6 +552,7 @@ Crafty.c('Graph', {
 		this._adjacencyList = [];
 		this._drawCache = [];
 		this._labels = {};
+		this.lineWidth = 0;
 	},
 	
 	loadGraph: function(graph) {
@@ -661,17 +663,17 @@ Crafty.c('Graph', {
 	},
 	
 	offsetX: function() {
-		return this._minX;
+		return this._minX - this.lineWidth/2;
 	},
 	
 	offsetY: function() {
-		return this._minY;
+		return this._minY - this.lineWidth/2;
 	},
 	
 	absoluteVertexBasePos: function() {
 		var absPos = this.absolutePos();
-		absPos._x -= this._minX;
-		absPos._y -= this._minY;
+		absPos._x -= this.offsetX();
+		absPos._y -= this.offsetY();
 		return absPos;
 	},
 	
@@ -680,8 +682,8 @@ Crafty.c('Graph', {
 		this._maxX = Math.max(this._maxX, Math.max(v1.x, v2.x));
 		this._minY = Math.min(this._minY, Math.min(v1.y, v2.y));
 		this._maxY = Math.max(this._maxY, Math.max(v1.y, v2.y));
-		this.w = this._maxX - this._minX;
-		this.h = this._maxY - this._minY;
+		this.w = this._maxX - this._minX + this.lineWidth;
+		this.h = this._maxY - this._minY + this.lineWidth;
 	},
 	
 	_graph_isInDrawCache: function(v1, v2) {
@@ -738,6 +740,13 @@ Crafty.c('Graph', {
 		else if (v1.x == v2.x && v1.y == v2.y)
 			return 0;
 		else return 1;
+	},
+	
+	_graph_change: function(data) {
+		if (typeof data.lineWidth !== 'undefined') {
+			this.w = this._maxX - this._minX + this.lineWidth;
+			this.h = this._maxY - this._minY + this.lineWidth;
+		}
 	},
 	
 	_graph_draw: function(data) {
