@@ -68,6 +68,8 @@ var testLevel = {
 	  [ [100,600], [100,900] ]
 	],
 	
+	vertexBase: [100,0],
+	
 	labels: {
 		start: {x1:150,y1:0, x2:150,y2:100}
 	},

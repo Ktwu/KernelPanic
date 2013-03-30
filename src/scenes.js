@@ -26,8 +26,11 @@ Crafty.scene(R.Scene.game, function() {
 	var graph = Crafty.e('GameGraph')
 		.gamegraph_load(testLevel)
 		.graph_makeUndirected()
-		.attr({lineWidth: 10})
+		.attr({lineWidth: 7, strokeStyle: "#FFFFFF"})
 		.centerOnX(Crafty.canvas._canvas.width/2);
+		
+	console.log(graph.x + " " + graph.y + " " + graph.w + " " + graph.h);
+	console.log(graph.graphdraw_vertexBaseX + " " + graph.graphdraw_vertexBaseY + " "  + graph._graphdraw_maxX + " " + graph._graphdraw_maxX);
 		
 	var player = Crafty.e('Player, Ellipse')
 		.attr({lineWidth: 5, onClose: 'fill', fillStyle: "#FFFFFF", w: 30, h: 30, graph: graph});
@@ -66,19 +69,17 @@ Crafty.scene(R.Scene.game, function() {
 	player.player_putOnLine(
 		start.x1, start.y1,
 		start.x2, start.y2);
-		
-	console.log(Crafty.canvas);	
 });
 
 // Loading scene
 // Handles the loading of binary assets such as images and audio files
 Crafty.scene(R.Scene.loading, function() {
 	// Simple loading screen
-	/*Crafty.e('2D, DOM, Text').text('Loading...').attr({
+	Crafty.e('2D, DOM, Text').text('Loading...').attr({
 		x : 0,
-		y : GamOs.height() / 2 - 24,
-		w : GamOs.width()
-	}).css(R.CSS.$text);*/
+		y : Crafty.canvas._canvas.height / 2 - 24,
+		w : Crafty.canvas._canvas.width
+	}).css(R.CSS.$text);
 	
 	// First check whether all of our requirements are met
 	if (!Crafty.support.canvas) {

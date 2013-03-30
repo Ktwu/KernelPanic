@@ -39,7 +39,8 @@ Crafty.c('GameGraph', {
 	_gamegraph_travelgraph: null,
 	
 	init: function() {
-		this.requires('BeforeDraw, Graph, GraphDraw, AfterDraw');
+		this.requires('BeforeDraw, Graph, GraphDraw, AfterDraw')
+		.bind('Change', this._gamegraph_change);
 		this._gamegraph_travelgraph = Crafty.e('GraphDraw');
 		
 		this._gamegraph_travelgraph.attr({
@@ -61,6 +62,11 @@ Crafty.c('GameGraph', {
 			}
 		}
 		
+		this.graphdraw_vertexBaseX = graph.vertexBase[0];
+		this.graphdraw_vertexBaseY = graph.vertexBase[1];
+		this._gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
+		this._gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
+		
 		var labels = graph.labels;
 		if (labels)
 			for (var label in labels) {
@@ -76,6 +82,13 @@ Crafty.c('GameGraph', {
 	
 	gamegraph_vertexBase: function() {
 		return this.graphdraw_vertexBase();
+	},
+	
+	_gamegraph_change: function(e) {
+		if (e.lineWidth !== undefined) {
+			this._gamegraph_travelgraph.x = this.x + e.lineWidth/2 - this._gamegraph_travelgraph.lineWidth/2;
+			this._gamegraph_travelgraph.y = this.y + e.lineWidth/2 - this._gamegraph_travelgraph.lineWidth/2;
+		}
 	}
 });
 

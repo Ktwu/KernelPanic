@@ -14,6 +14,7 @@ Crafty.c('KernelPanic', {
 		var edgeSet = Game.player.graph.graph_edgeSet(D.vector);
 		var vertices = edgeSet.endVertices;
 		
+		// Only add the graph if the player actually travelled the edge
 		Game.graph._gamegraph_travelgraph.graphdraw_tryAddEdge(
 			new Crafty.math.Vector2D(data.x, data.y),
 			new Crafty.math.Vector2D(data.otherX, data.otherY)
@@ -413,15 +414,21 @@ Crafty.c('Slider', {
 Crafty.c('GraphDraw', {
 	strokeStyle: "#000000",
 	lineWidth: 1,
+	graphdraw_vertexBaseX: 0,
+	graphdraw_vertexBaseY: 0,
 	
 	_graphdraw_adjacencyList: null,
-	_graphdraw_minX: Number.MAX_VALUE,
-	_graphdraw_maxX: Number.MIN_VALUE,
-	_graphdraw_minY: Number.MAX_VALUE,
-	_graphdraw_maxY: Number.MIN_VALUE,
+	_graphdraw_maxX: -Number.MAX_VALUE,
+	_graphdraw_maxY: -Number.MAX_VALUE,
 	
 	init: function() {
 		this.requires('CustomDraw, 2D, Center')
+		.attr({
+			x: 0,
+			y: 0,
+			w: 1,
+			h: 1,
+		})
 		.bind('Draw', this._graphdraw_draw)
 		.bind('Change',this._graphdraw_change);
 		this._graphdraw_adjacencyList = [];
@@ -455,11 +462,11 @@ Crafty.c('GraphDraw', {
 	},
 	
 	graphdraw_offsetX: function() {
-		return this._graphdraw_minX - this.lineWidth/2;
+		return this.graphdraw_vertexBaseX - this.lineWidth/2;
 	},
 	
 	graphdraw_offsetY: function() {
-		return this._graphdraw_minY - this.lineWidth/2;
+		return this.graphdraw_vertexBaseY - this.lineWidth/2;
 	},
 	
 	graphdraw_vertexBase: function() {
@@ -475,18 +482,16 @@ Crafty.c('GraphDraw', {
 	},
 	
 	_graphdraw_updateDimensions: function(v1, v2) {
-		this._graphdraw_minX = Math.min(this._graphdraw_minX, Math.min(v1.x, v2.x));
 		this._graphdraw_maxX = Math.max(this._graphdraw_maxX, Math.max(v1.x, v2.x));
-		this._graphdraw_minY = Math.min(this._graphdraw_minY, Math.min(v1.y, v2.y));
 		this._graphdraw_maxY = Math.max(this._graphdraw_maxY, Math.max(v1.y, v2.y));
-		this.w = this._graphdraw_maxX - this._graphdraw_minX + this.lineWidth;
-		this.h = this._graphdraw_maxY - this._graphdraw_minY + this.lineWidth;
+		this.w = this._graphdraw_maxX - this.graphdraw_vertexBaseX + this.lineWidth;
+		this.h = this._graphdraw_maxY - this.graphdraw_vertexBaseY + this.lineWidth;
 	},
 	
 	_graphdraw_change: function(data) {
 		if (typeof data.lineWidth !== 'undefined') {
-			this.w = this._graphdraw_maxX - this._graphdraw_minX + this.lineWidth;
-			this.h = this._graphdraw_maxY - this._graphdraw_minY + this.lineWidth;
+			this.w = this._graphdraw_maxX - this.graphdraw_vertexBaseX + this.lineWidth;
+			this.h = this._graphdraw_maxY - this.graphdraw_vertexBaseY + this.lineWidth;
 		}
 	},
 	
@@ -529,16 +534,6 @@ Crafty.c('GraphDraw', {
 	    }
 	    
 	    ctx.translate(-transX, -transY);
-	    
-	    /*ctx.translate(transX, transY);
-	    for (var i = 0; i < strokes.length; ++i) {
-	    	for (var j = 0; j < strokes[i].length; ++j)
-	    	ctx.beginPath();
-	    	ctx.arc(strokes[i][j].x, strokes[i][j].y, this.lineWidth/2, 0, 2*Math.PI, false);
-	    	ctx.closePath();
-	    	ctx.fill();
-	    }	    
-	    ctx.translate(-transX, -transY);*/	
 	}
 });
 
