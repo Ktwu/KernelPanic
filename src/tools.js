@@ -1,4 +1,14 @@
 var Tools = {
+	
+	are2DVEqual: function(a,b) {
+		return (a && b && a.x == b.x && a.y == b.y);	
+	},
+	
+	sort2DVFunction: function(a,b) {
+		var diff = a.x - b.x
+		return (diff == 0) ? a.y - b.y : diff;
+	},
+	
 	shouldClamp: function (a,b,c) {
 		var min = Math.min(a,c);
 		var max = Math.max(a,c);

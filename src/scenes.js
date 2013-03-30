@@ -23,8 +23,10 @@ Crafty.scene(R.Scene.game, function() {
 	
 	Game.KernelPanic = Crafty.e('KernelPanic'); 
 	
-	var graph = Crafty.e('GameGraph, Center').loadGraph(testLevel).makeUndirected()
-		.attr({lineWidth: 5})
+	var graph = Crafty.e('GameGraph')
+		.gamegraph_load(testLevel)
+		.graph_makeUndirected()
+		.attr({lineWidth: 10})
 		.centerOnX(Crafty.canvas._canvas.width/2);
 		
 	var player = Crafty.e('Player, Ellipse')
@@ -51,7 +53,7 @@ Crafty.scene(R.Scene.game, function() {
 			ctx.strokeStyle = "#00FF00";
 			ctx.beginPath();
 		
-			var absPos = Game.graph.absoluteVertexBasePos();
+			var absPos = Game.graph.gamegraph_vertexBase();
 			ctx.moveTo(Game.player.x1 + absPos._x, Game.player.y1 + absPos._y);
 			ctx.lineTo(Game.player.x2 + absPos._x, Game.player.y2 + absPos._y);
 		   	
@@ -60,21 +62,23 @@ Crafty.scene(R.Scene.game, function() {
 		}
 	);
 		
-	var start = graph.labelSet('start');
+	var start = graph.graph_labelSet('start');
 	player.player_putOnLine(
 		start.x1, start.y1,
-		start.x2, start.y2);		
+		start.x2, start.y2);
+		
+	console.log(Crafty.canvas);	
 });
 
 // Loading scene
 // Handles the loading of binary assets such as images and audio files
 Crafty.scene(R.Scene.loading, function() {
 	// Simple loading screen
-	Crafty.e('2D, DOM, Text').text('Loading...').attr({
+	/*Crafty.e('2D, DOM, Text').text('Loading...').attr({
 		x : 0,
 		y : GamOs.height() / 2 - 24,
 		w : GamOs.width()
-	}).css(R.CSS.$text);
+	}).css(R.CSS.$text);*/
 	
 	// First check whether all of our requirements are met
 	if (!Crafty.support.canvas) {

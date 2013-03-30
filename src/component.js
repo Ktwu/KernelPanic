@@ -11,8 +11,13 @@ Crafty.c('KernelPanic', {
 		// The vertices we can go to.
 		D.vector.x = data.x;
 		D.vector.y = data.y;	
-		var edgeSet = Game.player.graph.edgeSet(D.vector);
+		var edgeSet = Game.player.graph.graph_edgeSet(D.vector);
 		var vertices = edgeSet.endVertices;
+		
+		Game.graph._gamegraph_travelgraph.graphdraw_tryAddEdge(
+			new Crafty.math.Vector2D(data.x, data.y),
+			new Crafty.math.Vector2D(data.otherX, data.otherY)
+		);
 		
 		if (!vertices) {
 			Game.player.player_putOnLine(data.x, data.y, data.otherX, data.otherY);
@@ -41,6 +46,8 @@ Crafty.c('KernelPanic', {
 	
 	_kernelPanic_enterFrame: function() {
 		Game.graph.y -= .5;
+		if (Game.player.centerY() < 0 || Game.player.centerY() > Crafty.canvas._canvas.height)
+			console.log("death death death");
 	}
 });
 
@@ -402,218 +409,175 @@ Crafty.c('Slider', {
 	}
 });
 
-Crafty.c('Player', {
-	graph: null,
-	_tmp_vector: new Crafty.math.Vector2D(),
+
+Crafty.c('GraphDraw', {
+	strokeStyle: "#000000",
+	lineWidth: 1,
+	
+	_graphdraw_adjacencyList: null,
+	_graphdraw_minX: Number.MAX_VALUE,
+	_graphdraw_maxX: Number.MIN_VALUE,
+	_graphdraw_minY: Number.MAX_VALUE,
+	_graphdraw_maxY: Number.MIN_VALUE,
 	
 	init: function() {
-		this.requires('BeforeDraw, Slider, AfterDraw')
-		.bind(R.Event.sliderHit, this._player_sliderHit);
+		this.requires('CustomDraw, 2D, Center')
+		.bind('Draw', this._graphdraw_draw)
+		.bind('Change',this._graphdraw_change);
+		this._graphdraw_adjacencyList = [];
 	},
 	
-	player_putOnLine: function(x1, y1, x2, y2) {	
-		this.slide_setPoint1(x1, y1, ['LEFT_ARROW'])
-		.slide_setPoint2(x2, y2, ['RIGHT_ARROW']);
+	graphdraw_tryAddEdge: function(v1, v2) {
+		var orderedV = [v1.clone(), v2.clone()].sort(Tools.sort2DVFunction);
+		var edgeset;
 		
-		var absPos = this.graph.absoluteVertexBasePos();
-		x1 += absPos._x;
-		y1 += absPos._y;
-
-		this.centerOn(x1,y1)
-		.slide_anchor(0)
-		.slide_setSpeedFunctions(this._player_speed, this._player_releaseSpeed)
-		.slide_applySettings();
-	},
-	
-	_player_speed: function(time, speed) {
-		return Math.min(time/100, 10);
-	},
-	
-	_player_releaseSpeed: function(time, releaseSpeed, speed) {
-		speed -= 0.5;  return speed < 1 ? NaN : speed;
-	},
-	
-	_player_sliderHit: function(data) {
-		// Ferry the data from us to our game logic.
-		Game.KernelPanic.trigger(R.Event.sliderHit, data);
-	},
-});
-
-Crafty.c('GameHud', {
-	gameHud_startVertex: null,
-	gameHud_keyMap: null,
-	gameHud_displacement: 20,
-	_gameHud_keyList: ['D', 'C', 'X', 'Z', 'A', 'Q', 'W', 'E'],
-	_gameHud_angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
-	
-	init: function() {
-		this.requires('Ellipse')
-		.bind('Draw', this._gameHud_draw);
-		this.gameHud_keyMap = {};
-	},
-	
-	gameHud_clear: function() {
-		this.gameHud_keyMap = {};
-	},
-	
-	gameHud_load: function(edgeset) {
-		this.gameHud_startVertex = edgeset.startVertex;
-		var ends = edgeset.endVertices;
-		var angle;
-		var angles = [];
-		for (var i = 0; i < ends.length; ++i) {
-			D.vector.x = ends[i].x;
-			D.vector.y = ends[i].y;
-			D.vector = D.vector.subtract(edgeset.startVertex).normalize();
-			
-			angle = R.Vector.right.angleBetween(D.vector);
-			if (angle < 0)
-				angle += 2*Math.PI;
-			angles.push(angle);
+		for (var i = 0; i < this._graphdraw_adjacencyList.length; ++i) {
+			edgeset = this._graphdraw_adjacencyList[i];
+			if (Tools.are2DVEqual(orderedV[0], edgeset[0])) {
+					
+				for (var j = 1; j < edgeset.length; ++j) {
+					// If we found our second vertex, just return.  Nothing to add.
+					if (Tools.are2DVEqual(orderedV[1], edgeset[j]))
+						return;
+				}
+				
+				// We didn't find our second vertex.  Time to add it!
+				edgeset.push(orderedV[1]);
+				this._graphdraw_updateDimensions(orderedV[0], orderedV[1]);				
+				return this;
+			}	
 		}
 		
-		// For each angle, find its closest value.
-		// For the closest value, find out if someone is closer to it, and if so, repeat.
-		// For each matching, remove the matched values from their lists and repeat.
-		// Expensive for lots of things, but not for small things!
-		var angleBlacklist = [];
-		var keyAngleBlacklist = [];
-		var i = 0;
-		while (angleBlacklist.length < angles.length
-			&& keyAngleBlacklist.length < this._gameHud_keyList.length) {
-				
-			// Find the closest key-angle to our angle, then verify that there's no other
-			// key-angle that's closer
-			var keyData = Tools.toClosest(angles[i], this._gameHud_angleList, keyAngleBlacklist);
-			var angleData = Tools.toClosest(keyData.value, angles, angleBlacklist);
-			
-			if (angleData.value == angles[i]) {
-				// Excellent, a matching!
-				this.gameHud_keyMap[this._gameHud_keyList[keyData.i]] = {
-					direction: new Crafty.math.Vector2D(Math.cos(angles[i]), Math.sin(angles[i])),
-					vertex: ends[i]
-				};
-				
-				angleBlacklist.push(angleData.value);
-				keyAngleBlacklist.push(keyData.value);
-			} else {
-				// If some other angle is closer to our key, then let's find out
-				// who this new key should match to first.
-				i = angleData.i;
-			}
+		// Oh well, we didn't find our edge.  Add it.
+		this._graphdraw_adjacencyList.push(orderedV)
+		this._graphdraw_updateDimensions(orderedV[0], orderedV[1]);
+		return this;
+	},
+	
+	graphdraw_offsetX: function() {
+		return this._graphdraw_minX - this.lineWidth/2;
+	},
+	
+	graphdraw_offsetY: function() {
+		return this._graphdraw_minY - this.lineWidth/2;
+	},
+	
+	graphdraw_vertexBase: function() {
+		var absPos = {
+			_x: this.x,
+			_y: this.y
+		};
+		
+		absPos._x -= this.graphdraw_offsetX();
+		absPos._y -= this.graphdraw_offsetY();
+		
+		return absPos;
+	},
+	
+	_graphdraw_updateDimensions: function(v1, v2) {
+		this._graphdraw_minX = Math.min(this._graphdraw_minX, Math.min(v1.x, v2.x));
+		this._graphdraw_maxX = Math.max(this._graphdraw_maxX, Math.max(v1.x, v2.x));
+		this._graphdraw_minY = Math.min(this._graphdraw_minY, Math.min(v1.y, v2.y));
+		this._graphdraw_maxY = Math.max(this._graphdraw_maxY, Math.max(v1.y, v2.y));
+		this.w = this._graphdraw_maxX - this._graphdraw_minX + this.lineWidth;
+		this.h = this._graphdraw_maxY - this._graphdraw_minY + this.lineWidth;
+	},
+	
+	_graphdraw_change: function(data) {
+		if (typeof data.lineWidth !== 'undefined') {
+			this.w = this._graphdraw_maxX - this._graphdraw_minX + this.lineWidth;
+			this.h = this._graphdraw_maxY - this._graphdraw_minY + this.lineWidth;
 		}
 	},
 	
-	_gameHud_draw: function(data) {
+	_graphdraw_draw: function(data) {
+		// We don't support drawing to the DOM, sadly
+		if (data.type == 'DOM')
+			return;
+		
+		// For now, naively draw all of our strokes
+		var strokes = this._graphdraw_adjacencyList;
 		var ctx = data.ctx;
+		var pos = data.pos;
 		
-		ctx.save();
-		ctx.fillStyle = "#FF0000";
-		ctx.font = "bold 12px sans-serif";
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		for (var key in this.gameHud_keyMap) {
-			ctx.fillText(key, 
-				(this.gameHud_displacement * this.gameHud_keyMap[key].direction.x + this.centerX()),
-				(this.gameHud_displacement * this.gameHud_keyMap[key].direction.y + this.centerY()));
-		}
+		ctx.strokeStyle = this.strokeStyle;
+		ctx.fillStyle = this.strokeStyle;
+		ctx.lineWidth = this.lineWidth;
+		ctx.beginPath();
 		
-		ctx.restore();
-	}
-});
-
-Crafty.c('GameGraph', {
-	init: function() {
-		this.requires('BeforeDraw, Graph, AfterDraw');
+		// Render the smallest point at (x,y)
+		var transX = pos._x - this.graphdraw_offsetX();
+		var transY = pos._y - this.graphdraw_offsetY();
+		ctx.translate(transX, transY);
+		for (var i = 0; i < strokes.length; ++i) {
+			for (var j = 0; j < strokes[i].length; ++j) {
+				ctx.moveTo(strokes[i][0].x, strokes[i][0].y);
+				ctx.lineTo(strokes[i][j].x, strokes[i][j].y);
+	   		}
+	   	}
+	   	
+	    ctx.closePath();
+	    ctx.stroke();
+	    
+	    for (var i = 0; i < strokes.length; ++i) {
+	    	for (var j = 0; j < strokes[i].length; ++j) {
+		    	ctx.beginPath();
+		    	ctx.arc(strokes[i][j].x, strokes[i][j].y, this.lineWidth/2, 0, 2*Math.PI, false);
+		    	ctx.closePath();
+		    	ctx.fill();
+	    	}
+	    }
+	    
+	    ctx.translate(-transX, -transY);
+	    
+	    /*ctx.translate(transX, transY);
+	    for (var i = 0; i < strokes.length; ++i) {
+	    	for (var j = 0; j < strokes[i].length; ++j)
+	    	ctx.beginPath();
+	    	ctx.arc(strokes[i][j].x, strokes[i][j].y, this.lineWidth/2, 0, 2*Math.PI, false);
+	    	ctx.closePath();
+	    	ctx.fill();
+	    }	    
+	    ctx.translate(-transX, -transY);*/	
 	}
 });
 
 
 Crafty.c('Graph', {
-	_adjacencyList: null,
-	_drawCache: null,
-	_labels: null,
-	
-	_minX: Number.MAX_VALUE,
-	_maxX: Number.MIN_VALUE,
-	_minY: Number.MAX_VALUE,
-	_maxY: Number.MIN_VALUE,
+	_graph_adjacencyList: null,
+	_graph_labels: null,
 	
 	init: function() {
-		this.requires('CustomDraw')
-		.bind("Draw", this._graph_draw)
-		.bind("Change", this._graph_change)
-		.attr({
-			x: 0,
-			y: 0,
-			w: 1,
-			h: 1
-		});
-		this._adjacencyList = [];
-		this._drawCache = [];
-		this._labels = {};
-		this.lineWidth = 0;
-	},
-	
-	loadGraph: function(graph) {
-		this._adjacencyList = [];
-		this._drawCache = [];
-		this._labels = {};
-		
-		var list = graph.list;
-		for (var i = 0; i < list.length; ++i) {
-			var v1 = new Crafty.math.Vector2D(list[i][0][0], list[i][0][1]);
-			for (var j = 1; j < list[i].length; ++j) {
-				this.unsafeAddEdge(v1, new Crafty.math.Vector2D(list[i][j][0], list[i][j][1]), false)
-			}
-		}
-		
-		var labels = graph.labels;
-		if (labels) {
-			for (var label in labels) {
-				this.addLabel(label, labels[label]);
-			}
-		}
-		
-		this.strokeStyle = graph.strokeStyle;
-		this.lineWidth = graph.lineWidth;
-		
-		return this;
+		this._graph_adjacencyList = [];
+		this._graph_labels = {};
 	},
 
-	makeUndirected: function() {
-		for (var i = 0; i < this._adjacencyList.length; ++i) {
-			var vertex = this._adjacencyList[i].startVertex;
-			var neighborSet = this.neighborSet(vertex);
+	graph_makeUndirected: function() {
+		for (var i = 0; i < this._graph_adjacencyList.length; ++i) {
+			var vertex = this._graph_adjacencyList[i].startVertex;
+			var neighborSet = this.graph_neighborSet(vertex);
 			if (neighborSet != null) {
 				for (var j = 0; j < neighborSet.length; ++j) {
-					this.safeAddEdge(neighborSet[j], vertex, true);
+					this.graph_safeAddEdge(neighborSet[j], vertex);
 				}
 			}
 		}
 		return this;
 	},
 	
-	unsafeAddEdge: function(v1, v2, o_ignoreCache) {
-		var edges = this.edgeSet(v1);
+	graph_unsafeAddEdge: function(v1, v2) {
+		var edges = this.graph_edgeSet(v1);
 		
-		if (edges == null) {
+		if (edges == null)
 			this._graph_addNewEdgeSet(v1, v2);
-		} else {
+		else
 			edges.endVertices.push(v2);
-		}
 		
-		// Determine whether we should add the edge to our drawing cache
-		if (!o_ignoreCache) {
-			this._graph_tryToAddToDrawCache(v1,v2);
-		}
-		
-		this._graph_updateDimensions(v1, v2);
 		return this;
 	},
 	
-	safeAddEdge: function(v1, v2, o_ignoreCache) {
-		var edges = this.edgeSet(v1);
+	graph_safeAddEdge: function(v1, v2) {
+		var edges = this.graph_edgeSet(v1);
 		if (edges == null) {
 			// We don't have any edgesets for v1, so create it.
 			this._graph_addNewEdgeSet(v1, v2);
@@ -628,99 +592,31 @@ Crafty.c('Graph', {
 				
 			// We didn't find the edge, so add it and return
 			edges.endVertices.push(v2);
-		}
+		}	
 		
-		// Determine whether we should add the edge to our drawing cache
-		if (!o_ignoreCache && !this._graph_isInDrawCache(v2,v1)) {
-			this._graph_tryToAddToDrawCache(v1,v2);
-		}		
-		
-		this._graph_updateDimensions(v1, v2);
 		return this;
 	},
 	
-	addLabel: function(label, v) {
-		this._labels[label] = v;
+	graph_addLabel: function(label, v) {
+		this._graph_labels[label] = v;
 	},
 	
-	neighborSet: function(v) {
-		var edgeSet = this.edgeSet(v);
+	graph_neighborSet: function(v) {
+		var edgeSet = this.graph_edgeSet(v);
 		return (edgeSet == null) ? null : edgeSet.endVertices;
 	},
 	
-	edgeSet: function(v) {
-		for (var i = 0; i < this._adjacencyList.length; ++i) {
-			var edges = this._adjacencyList[i];
-			if (edges.startVertex.x == v.x && edges.startVertex.y == v.y) {
+	graph_edgeSet: function(v) {
+		for (var i = 0; i < this._graph_adjacencyList.length; ++i) {
+			var edges = this._graph_adjacencyList[i];
+			if (edges.startVertex.x == v.x && edges.startVertex.y == v.y)
 				return edges;
-			}
 		}
 		return null;
 	},
 	
-	labelSet: function(label) {
-		return this._labels[label];
-	},
-	
-	offsetX: function() {
-		return this._minX - this.lineWidth/2;
-	},
-	
-	offsetY: function() {
-		return this._minY - this.lineWidth/2;
-	},
-	
-	absoluteVertexBasePos: function() {
-		var absPos = this.absolutePos();
-		absPos._x -= this.offsetX();
-		absPos._y -= this.offsetY();
-		return absPos;
-	},
-	
-	_graph_updateDimensions: function(v1, v2) {
-		this._minX = Math.min(this._minX, Math.min(v1.x, v2.x));
-		this._maxX = Math.max(this._maxX, Math.max(v1.x, v2.x));
-		this._minY = Math.min(this._minY, Math.min(v1.y, v2.y));
-		this._maxY = Math.max(this._maxY, Math.max(v1.y, v2.y));
-		this.w = this._maxX - this._minX + this.lineWidth;
-		this.h = this._maxY - this._minY + this.lineWidth;
-	},
-	
-	_graph_isInDrawCache: function(v1, v2) {
-		var d1, d2;
-		var inCache = false;
-		for (var i = 0; i < this._drawCache && !inCache; ++i) {
-			d1 = this._drawCache[i][0];
-			if (d1.x == v1.x && d1.y == v1.y) {
-				for (var j = 1; j < this._drawCache[i] && !inCache; ++j) {
-					d2 = this._drawCache[i][j];
-					inCache = d2.x == v2.x && d2.y == v2.y;
-				}
-			}	
-		}
-		return inCache;
-	},
-	
-	_graph_tryToAddToDrawCache: function(v1, v2) {
-		var d1, d2;
-		var inCache = false;
-		for (var i = 0; i < this._drawCache && !inCache; ++i) {
-			d1 = this._drawCache[i][0];
-			if (d1.x == v1.x && d1.y == v1.y) {
-				for (var j = 1; j < this._drawCache[i] && !inCache; ++j) {
-					d2 = this._drawCache[i][j];
-					inCache = d2.x == v2.x && d2.y == v2.y;
-				}
-				
-				if (!inCache) {
-					this._drawCache[i].push(v2);
-				}
-				
-				return;
-			}	
-		}
-		
-		this._drawCache.push([v1, v2]);
+	graph_labelSet: function(label) {
+		return this._graph_labels[label];
 	},
 	
 	_graph_addNewEdgeSet: function(v1, v2) {
@@ -728,56 +624,9 @@ Crafty.c('Graph', {
 			startVertex: v1,
 			endVertices: (v2 == undefined ? [] : [v2])
 		};
-		this._adjacencyList.push(edges);
+		this._graph_adjacencyList.push(edges);
 		return edges;
 	},
-	
-	_graph_sort: function(v1, v2) {
-		if (v1.x < v2.x)
-			return -1
-		else if (v1.x == v2.x && v1.y < v2.y)
-			return -1;
-		else if (v1.x == v2.x && v1.y == v2.y)
-			return 0;
-		else return 1;
-	},
-	
-	_graph_change: function(data) {
-		if (typeof data.lineWidth !== 'undefined') {
-			this.w = this._maxX - this._minX + this.lineWidth;
-			this.h = this._maxY - this._minY + this.lineWidth;
-		}
-	},
-	
-	_graph_draw: function(data) {
-		// We don't support drawing to the DOM, sadly
-		if (data.type == 'DOM')
-			return;
-		
-		// For now, naively draw all of our strokes
-		var strokes = this._drawCache;
-		var ctx = data.ctx;
-		var pos = data.pos;
-		
-		ctx.strokeStyle = this.strokeStyle;
-		ctx.lineWidth = this.lineWidth;
-		ctx.beginPath();
-		
-		// Render the smallest point at (x,y)
-		var transX = pos._x - this.offsetX();
-		var transY = pos._y - this.offsetY();
-		ctx.translate(transX, transY);
-		for (var i = 0; i < strokes.length; ++i) {
-			for (var j = 0; j < strokes[i].length; ++j) {
-				ctx.moveTo(strokes[i][0].x, strokes[i][0].y);
-				ctx.lineTo(strokes[i][j].x, strokes[i][j].y);
-	   		}
-	   	}
-	    ctx.translate(-transX, -transY);
-	   	
-	    ctx.closePath();
-	    ctx.stroke();		
-	}
 });
 
 
