@@ -24,14 +24,15 @@ Crafty.scene(R.Scene.game, function() {
 	Game.KernelPanic = Crafty.e('KernelPanic'); 
 	
 	var graph = Crafty.e('GameGraph')
-		.gamegraph_load(testLevel)
+		.gamegraph_load(level1)
 		.graph_makeUndirected()
 		.attr({lineWidth: 7, strokeStyle: "#FFFFFF"})
-		.centerOnX(Crafty.canvas._canvas.width/2);
-		
-	console.log(graph.x + " " + graph.y + " " + graph.w + " " + graph.h);
-	console.log(graph.graphdraw_vertexBaseX + " " + graph.graphdraw_vertexBaseY + " "  + graph._graphdraw_maxX + " " + graph._graphdraw_maxX);
-		
+		.centerOnX(Crafty.canvas._canvas.width/2);	
+	graph.gamegraph_travelgraph.attr({
+		lineWidth: 5,
+		strokeStyle: "#00FF66"
+	});
+			
 	var player = Crafty.e('Player, Ellipse')
 		.attr({lineWidth: 5, onClose: 'fill', fillStyle: "#FFFFFF", w: 30, h: 30, graph: graph});
 	
@@ -58,7 +59,7 @@ Crafty.scene(R.Scene.game, function() {
 		
 			var absPos = Game.graph.gamegraph_vertexBase();
 			ctx.moveTo(Game.player.x1 + absPos._x, Game.player.y1 + absPos._y);
-			ctx.lineTo(Game.player.x2 + absPos._x, Game.player.y2 + absPos._y);
+			ctx.lineTo(Game.player.centerX(), Game.player.centerY());
 		   	
 		    ctx.closePath();
 		    ctx.stroke();

@@ -1,15 +1,20 @@
 Crafty.c('Player', {
 	graph: null,
+	slideTarget: null,
 	_tmp_vector: new Crafty.math.Vector2D(),
 	
 	init: function() {
 		this.requires('BeforeDraw, Slider, AfterDraw')
 		.bind(R.Event.sliderHit, this._player_sliderHit);
+		this.slideTarget = new Crafty.math.Vector2D();
 	},
 	
 	player_putOnLine: function(x1, y1, x2, y2) {	
 		this.slide_setPoint1(x1, y1, ['LEFT_ARROW'])
 		.slide_setPoint2(x2, y2, ['RIGHT_ARROW']);
+		
+		this.slideTarget.x = x2;
+		this.slideTarget.y = y2;
 		
 		var absPos = this.graph.gamegraph_vertexBase();
 		x1 += absPos._x;
@@ -36,18 +41,18 @@ Crafty.c('Player', {
 });
 
 Crafty.c('GameGraph', {
-	_gamegraph_travelgraph: null,
+	gamegraph_travelgraph: null,
 	
 	init: function() {
 		this.requires('BeforeDraw, Graph, GraphDraw, AfterDraw')
 		.bind('Change', this._gamegraph_change);
-		this._gamegraph_travelgraph = Crafty.e('GraphDraw');
+		this.gamegraph_travelgraph = Crafty.e('GraphDraw');
 		
-		this._gamegraph_travelgraph.attr({
+		this.gamegraph_travelgraph.attr({
 			strokeStyle: "#0000FF", 
 			lineWidth: 5
 		});
-		this.attach(this._gamegraph_travelgraph);
+		this.attach(this.gamegraph_travelgraph);
 	},
 	
 	gamegraph_load: function(graph) {
@@ -64,8 +69,8 @@ Crafty.c('GameGraph', {
 		
 		this.graphdraw_vertexBaseX = graph.vertexBase[0];
 		this.graphdraw_vertexBaseY = graph.vertexBase[1];
-		this._gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
-		this._gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
+		this.gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
+		this.gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
 		
 		var labels = graph.labels;
 		if (labels)
@@ -77,7 +82,7 @@ Crafty.c('GameGraph', {
 	},
 	
 	gamegraph_addTraveledEdge: function(v1, v2) {
-		this._gamegraph_travelgraph.graphdraw_tryAddEdge(v1, v2);
+		this.gamegraph_travelgraph.graphdraw_tryAddEdge(v1, v2);
 	},
 	
 	gamegraph_vertexBase: function() {
@@ -86,8 +91,8 @@ Crafty.c('GameGraph', {
 	
 	_gamegraph_change: function(e) {
 		if (e.lineWidth !== undefined) {
-			this._gamegraph_travelgraph.x = this.x + e.lineWidth/2 - this._gamegraph_travelgraph.lineWidth/2;
-			this._gamegraph_travelgraph.y = this.y + e.lineWidth/2 - this._gamegraph_travelgraph.lineWidth/2;
+			this.gamegraph_travelgraph.x = this.x + e.lineWidth/2 - this.gamegraph_travelgraph.lineWidth/2;
+			this.gamegraph_travelgraph.y = this.y + e.lineWidth/2 - this.gamegraph_travelgraph.lineWidth/2;
 		}
 	}
 });

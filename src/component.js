@@ -14,11 +14,14 @@ Crafty.c('KernelPanic', {
 		var edgeSet = Game.player.graph.graph_edgeSet(D.vector);
 		var vertices = edgeSet.endVertices;
 		
-		// Only add the graph if the player actually travelled the edge
-		Game.graph._gamegraph_travelgraph.graphdraw_tryAddEdge(
-			new Crafty.math.Vector2D(data.x, data.y),
-			new Crafty.math.Vector2D(data.otherX, data.otherY)
-		);
+		// Only add the edge to our traveled list if the player actually traveled the edge
+		if (Game.player.slideTarget.x == data.x && Game.player.slideTarget.y == data.y) {
+			console.log("Traveled edge!");
+			Game.graph.gamegraph_travelgraph.graphdraw_tryAddEdge(
+				new Crafty.math.Vector2D(data.x, data.y),
+				new Crafty.math.Vector2D(data.otherX, data.otherY)
+			);
+		}
 		
 		if (!vertices) {
 			Game.player.player_putOnLine(data.x, data.y, data.otherX, data.otherY);
@@ -46,7 +49,11 @@ Crafty.c('KernelPanic', {
 	},
 	
 	_kernelPanic_enterFrame: function() {
-		Game.graph.y -= .5;
+		// Why the fuck not.
+		Game.graph.attr({
+			//lineWidth: Game.graph.lineWidth + 0.02,
+			y: Game.graph.y - 0.5
+		});
 		if (Game.player.centerY() < 0 || Game.player.centerY() > Crafty.canvas._canvas.height)
 			console.log("death death death");
 	}
@@ -65,19 +72,22 @@ Crafty.c('Center', {
 	},
 
 	centerOnX: function(x) {
-		this.x = x - this.w/2;
-		return this;
+		return this.attr({
+			x: x - this.w/2
+		});
 	},
 	
 	centerOnY: function(y) {
-		this.y = y - this.y/2;
-		return this;
+		return this.attr({
+			y: y - this.h/2
+		});
 	},
 	
 	centerOn: function(x, y) {
-  		this.x = x - this.w/2,
-  		this.y = y - this.h/2
-  		return this;	
+		return this.attr({
+			x: x - this.w/2,
+			y: y - this.h/2
+		});
 	},
 	
 	centerX: function() {
