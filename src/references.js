@@ -6,9 +6,10 @@ var KernelPanic = null;
 var R = {
 	
 	States: {
-		none: 			-1,
-		move: 			 0,
-		chooseDirection: 1,
+		none: 			 -1,
+		move: 			 -2,
+		chooseDirection: -3,
+		graphChange:     -4
 	},
 	
 	Scene: {

@@ -351,6 +351,10 @@ Crafty.c('GameGraph', {
 
 Crafty.c('GameLevel', {
 	graphs: null,
+	fromGraphI: -1,
+	toGraphI: -1,
+	widthToTravel: 0,
+	dirToTravel: 0,
 	
 	init: function() {
 		// bind for game-specific functions
@@ -358,6 +362,40 @@ Crafty.c('GameLevel', {
 		.bind('EnterFrame', this._gamelevel_enterFrame)
 		.bind('KeyDown', this._gamelevel_keydown);
 		this.graphs = [];
+		
+		// Callbacks to allow the graphs to scroll on graph change.
+		this.onRegister[R.States.graphChange] = function(oldState, data) {
+			// Our data is the ID of the graph we're switching to.
+			this.toGraphI = data;
+			this.fromGraphI = oldState;
+			
+			if (this.fromGraphI < 0) {
+				console.log("uh, 0?");
+				this.widthToTravel = 0;
+			} else {
+				console.log("wooo enabled");
+				var thisGraph = this.graphs[this.fromGraphI];
+				var thatGraph = this.graphs[this.toGraphI];
+				
+				if (this.toGraphI < this.fromGraphI) {
+					this.widthToTravel = Math.max(Crafty.canvas._canvas.width, thatGraph.w);
+					this.dirToTravel = -1;
+				} else {
+					this.widthToTravel = Math.max(Crafty.canvas._canvas.width, thisGraph.w);
+					this.dirToTravel = 1;
+				}
+					
+				thatGraph.attr({
+					x: thisGraph.x + (this.widthToTravel * this.dirToTravel)
+				});				
+				this.graphs[this.toGraphI].enableState();
+			}
+			
+			this.bind('EnterFrame', this._gamelevel_graphChange);	
+		};
+		this.onUnregister[R.States.graphChange] = function() {
+			this.unbind('EnterFrame', this._gamelevel_graphChange);
+		};
 	},
 	
 	load: function(graphs) {
@@ -390,36 +428,52 @@ Crafty.c('GameLevel', {
 				start.x2, start.y2
 			);
 			
-			this.onRegister[i] = function(state, data) {
-				this.graphs[this.currentState].enableState();		
-			};
-			this.onUnregister[i] = function() {
-				this.graphs[this.currentState].disableState();
-			};
+			//this.onRegister[i] = function() {
+			//	var canvas = Crafty.canvas._canvas;
+			//	Crafty.canvas.context.clearRect(0, 0, canvas.width, canvas.height);
+			//	this.graphs[this.currentState].enableState();		
+			//};
+			//this.onUnregister[i] = function() {
+			//	this.graphs[this.currentState].disableState();
+			//};
 		}
 		
-		this.contextSwitchGraphs(0);
-	},
-	
-	contextSwitchGraphs: function(i) {
-		this.transitionTo(i % this.graphs.length);
+		this.graphs[0].enableState();
+		this.setCurrentState(0);
 	},
 	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
-		if (key == 'S') {
-			this.contextSwitchGraphs(this.currentState + 1);
+		if (key == 'S' && this.currentState != R.States.graphChange) {
+			this.transitionTo(R.States.graphChange, (this.currentState + 1) % this.graphs.length);
 		}	
+	},
+	
+	_gamelevel_graphChange: function() {
+		// Scroll both our current state and new state to center on the new state.
+		if (this.widthToTravel > 0) {
+			// TODO speed function and disable input while switching
+			// TODO maybe float player between swap
+			this.graphs[this.toGraphI].x -= 5 * this.dirToTravel;
+			this.graphs[this.fromGraphI].x -= 5 * this.dirToTravel;
+			this.widthToTravel -= Math.abs(5 * this.dirToTravel);
+		} else {
+			if (this.fromGraphI >= 0)
+				this.graphs[this.fromGraphI].disableState();
+			this.transitionTo(this.toGraphI);
+		}
 	},
 	
 	_gamelevel_enterFrame: function() {
 		// Why the fuck not.
-		this.graphs[this.currentState].attr({
-			//lineWidth: Game.graph.lineWidth + 0.02,
-			y: this.graphs[this.currentState].y - 0.5
-		});
-		var player = this.graphs[this.currentState].gamegraph_gameplayer;
-		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height)
-			console.log("death death death");
+		if (this.currentState >= 0 && this.currentState < this.graphs.length) {
+			this.graphs[this.currentState].attr({
+				//lineWidth: Game.graph.lineWidth + 0.02,
+				y: this.graphs[this.currentState].y - 0.5
+			});
+			var player = this.graphs[this.currentState].gamegraph_gameplayer;
+			if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height)
+				console.log("death death death");
+		}
 	}
 });

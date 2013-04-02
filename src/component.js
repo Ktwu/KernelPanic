@@ -8,12 +8,14 @@ Crafty.c('CustomDraw', {
 	},
 	
 	disableDrawing: function() {
+		this.ready = false;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
 			this.unbind('Draw', this.drawFunctions[i]);
 		}
 	},
 	
 	enableDrawing: function() {
+		this.ready = true;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
 			this.bind('Draw', this.drawFunctions[i]);
 		}		
@@ -31,6 +33,13 @@ Crafty.c('StateMachine', {
 	init: function() {
 		this.onRegister = {};
 		this.onUnregister = {};
+	},
+	
+	setCurrentState: function(state, data) {
+		this.currentState = state;
+		if (this.onRegister[state]) {
+			this.onRegister[state].call(this, this.lastState, data);
+		}		
 	},
 	
 	transitionTo: function(state, data) {
