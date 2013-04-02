@@ -1,69 +1,50 @@
-Crafty.c('KernelPanic', {
+Crafty.c('CustomDraw', {
+	drawFunctions: null,
+	ready: true,
+	
 	init: function() {
-		// bind for game-specific functions
-		this.bind(R.Event.sliderHit, this._kernelPanic_sliderHit)
-		.bind('EnterFrame', this._kernelPanic_enterFrame);
+		this.requires('2D, Canvas');
+		this.drawFunctions = [];
 	},
 	
-	// When the play hits a node, we determine whether they've hit an in-game object
-	// or if they need to choose a new path to travel on.
-	_kernelPanic_sliderHit: function(data) {
-		// The vertices we can go to.
-		D.vector.x = data.x;
-		D.vector.y = data.y;	
-		var edgeSet = Game.player.graph.graph_edgeSet(D.vector);
-		var vertices = edgeSet.endVertices;
-		
-		// Only add the edge to our traveled list if the player actually traveled the edge
-		if (Game.player.slideTarget.x == data.x && Game.player.slideTarget.y == data.y) {
-			console.log("Traveled edge!");
-			Game.graph.gamegraph_travelgraph.graphdraw_tryAddEdge(
-				new Crafty.math.Vector2D(data.x, data.y),
-				new Crafty.math.Vector2D(data.otherX, data.otherY)
-			);
-		}
-		
-		if (!vertices) {
-			Game.player.player_putOnLine(data.x, data.y, data.otherX, data.otherY);
-		} else {
-			Game.player.multi_disableControl();
-			Game.hud.visible = true;
-			Game.hud.gameHud_clear();	
-			
-			Game.hud.gameHud_load(edgeSet);
-			this.bind('KeyDown', this._kernelPanic_waitForHudChoice);
-		} 
-	},
-	
-	_kernelPanic_waitForHudChoice: function(e) {
-		var key = R.CodeToKey[e.key];
-		if (Game.hud.gameHud_keyMap[key]) {
-			var end = Game.hud.gameHud_keyMap[key].vertex;
-			var start = Game.hud.gameHud_startVertex;
-				
-			Game.player.player_putOnLine(start.x, start.y, end.x, end.y);
-			Game.player.multi_enableControl();
-			Game.hud.visible = false;
-			this.unbind('KeyDown', this._kernelPanic_waitForHudChoice);
+	disableDrawing: function() {
+		for (var i = 0; i < this.drawFunctions.length; ++i) {
+			this.unbind('Draw', this.drawFunctions[i]);
 		}
 	},
 	
-	_kernelPanic_enterFrame: function() {
-		// Why the fuck not.
-		Game.graph.attr({
-			//lineWidth: Game.graph.lineWidth + 0.02,
-			y: Game.graph.y - 0.5
-		});
-		if (Game.player.centerY() < 0 || Game.player.centerY() > Crafty.canvas._canvas.height)
-			console.log("death death death");
+	enableDrawing: function() {
+		for (var i = 0; i < this.drawFunctions.length; ++i) {
+			this.bind('Draw', this.drawFunctions[i]);
+		}		
 	}
 });
 
-Crafty.c('CustomDraw', {
-	ready: true,
+// Simple state machine.  Woooooo.
+Crafty.c('StateMachine', {
+	onRegister: null,
+	onUnregister: null,
+	
+	lastState: -1,
+	currentState: -1,
+	
 	init: function() {
-		this.requires('2D, Canvas');
-	}
+		this.onRegister = {};
+		this.onUnregister = {};
+	},
+	
+	transitionTo: function(state, data) {
+		if (this.onUnregister[this.currentState]) {
+			this.onUnregister[this.currentState].call(this, state, data);
+		}
+		
+		this.lastState = this.currentState;
+		this.currentState = state;
+		
+		if (this.onRegister[state]) {
+			this.onRegister[state].call(this, this.lastState, data);
+		}
+	},	
 });
 
 Crafty.c('Center', {
@@ -99,36 +80,6 @@ Crafty.c('Center', {
 	}
 });
 
-Crafty.c('BeforeDraw', {
-	beforeDrawFunctions: null,
-	
-	init: function() {
-		this.requires('CustomDraw')
-		.bind('Draw', this._before_draw);
-		this.beforeDrawFunctions = [];
-	},
-	
-	_before_draw: function(data) {
-		for (var i = 0; i < this.beforeDrawFunctions.length; ++i)
-			this.beforeDrawFunctions[i](data);
-	}
-});
-
-Crafty.c('AfterDraw', {
-	afterDrawFunctions: null,
-	
-	init: function() {
-		this.requires('CustomDraw')
-		.bind('Draw', this._after_draw);
-		this.afterDrawFunctions = [];
-	},
-	
-	_after_draw: function(data) {
-		for (var i = 0; i < this.afterDrawFunctions.length; ++i)
-			this.afterDrawFunctions[i](data);
-	}
-});
-
 Crafty.c("MultiInput", {
 	_activeMap: null,
 	_cooloffMap: null,
@@ -144,8 +95,71 @@ Crafty.c("MultiInput", {
 		this.multi_clear();
 		this.bind("EnterFrame", this._multi_enterframe);
 	},
+	
+	multi_undoMove: function () {
+		this.x -= this._movement.x;
+		this.y -= this._movement.y;
+	},
+	
+	multi_clearCooloff: function () {
+		this._cooloffMap = {};
+	},
 
-	_multi_keydown: function (e) {
+	multi_clear: function() {
+		this._activeMap = {};
+		this._cooloffMap = {};
+		this._keys = {};
+	},
+	
+	multi_add: function (keys, speed, speedReleaseFunc) {
+		var isNum = !isNaN(speed);
+		var speedNum = isNum ? speed : 0;
+		var speedFunc = isNum ? null : speed;
+		
+		for (var k in keys) {
+			var keyCode = Crafty.keys[k];
+			this._keys[keyCode] = {
+				speedNum: speedNum,
+				speedFunc: speedFunc,
+				speedReleaseFunc: speedReleaseFunc,
+				x: Math.round(Math.cos(keys[k] * (Math.PI / 180)) * 1000) / 1000,
+				y: Math.round(Math.sin(keys[k] * (Math.PI / 180)) * 1000) / 1000,
+				lastSpeed: 0,
+				speedOnRelease: 0,
+				startTime: 0
+			};
+			
+			if (Crafty.keydown[keyCode]) {
+				this.trigger("KeyDown", { key: keyCode });
+			}
+		}
+
+		this.multi_enableControl();
+
+		return this;
+	},
+
+  	multi_enableControl: function() {
+  		if (this._multi_enabled)
+  			return this;
+  			
+		this.bind("KeyDown", this._multi_keydown)
+		.bind("KeyUp", this._multi_keyup);
+		this._multi_enabled = true;
+		return this;
+  	},
+
+  	multi_disableControl: function() {
+  		if (!this._multi_enabled)
+  			return this;
+  			
+		this.unbind("KeyDown", this._multi_keydown)
+		.unbind("KeyUp", this._multi_keyup)
+		this._multi_enabled = false;
+		return this;
+  	},
+  	
+ 	_multi_keydown: function (e) {
 		var keyInfo = this._keys[e.key];
 		if (this._keys[e.key]) {
 			delete this._cooloffMap[e.key];
@@ -238,70 +252,7 @@ Crafty.c("MultiInput", {
 		
 		if (doTrigger)
 			this.trigger('Moved', { x: this._movement.x, y: this._movement.y });	
-	},
-	
-	multi_undoMove: function () {
-		this.x -= this._movement.x;
-		this.y -= this._movement.y;
-	},
-	
-	multi_clearCooloff: function () {
-		this._cooloffMap = {};
-	},
-
-	multi_clear: function() {
-		this._activeMap = {};
-		this._cooloffMap = {};
-		this._keys = {};
-	},
-	
-	multi_add: function (keys, speed, speedReleaseFunc) {
-		var isNum = !isNaN(speed);
-		var speedNum = isNum ? speed : 0;
-		var speedFunc = isNum ? null : speed;
-		
-		for (var k in keys) {
-			var keyCode = Crafty.keys[k];
-			this._keys[keyCode] = {
-				speedNum: speedNum,
-				speedFunc: speedFunc,
-				speedReleaseFunc: speedReleaseFunc,
-				x: Math.round(Math.cos(keys[k] * (Math.PI / 180)) * 1000) / 1000,
-				y: Math.round(Math.sin(keys[k] * (Math.PI / 180)) * 1000) / 1000,
-				lastSpeed: 0,
-				speedOnRelease: 0,
-				startTime: 0
-			};
-			
-			if (Crafty.keydown[keyCode]) {
-				this.trigger("KeyDown", { key: keyCode });
-			}
-		}
-
-		this.multi_enableControl();
-
-		return this;
-	},
-
-  	multi_enableControl: function() {
-  		if (this._multi_enabled)
-  			return this;
-  			
-		this.bind("KeyDown", this._multi_keydown)
-		.bind("KeyUp", this._multi_keyup);
-		this._multi_enabled = true;
-		return this;
-  	},
-
-  	multi_disableControl: function() {
-  		if (!this._multi_enabled)
-  			return this;
-  			
-		this.unbind("KeyDown", this._multi_keydown)
-		.unbind("KeyUp", this._multi_keyup)
-		this._multi_enabled = false;
-		return this;
-  	},
+	}
 });
 
 Crafty.c('Slider', {
@@ -439,9 +390,9 @@ Crafty.c('GraphDraw', {
 			w: 1,
 			h: 1,
 		})
-		.bind('Draw', this._graphdraw_draw)
 		.bind('Change',this._graphdraw_change);
-		this._graphdraw_adjacencyList = [];
+		this._graphdraw_adjacencyList = [];		
+		this.drawFunctions.push(this._graphdraw_draw);
 	},
 	
 	graphdraw_tryAddEdge: function(v1, v2) {
@@ -635,13 +586,10 @@ Crafty.c('Graph', {
 });
 
 
-// This is the player-controlled character
 Crafty.c('Ellipse', {
   init: function() {
     this.requires('CustomDraw, Center')
-      this.bind("Draw", this._ellipse_draw);
-        
-      this.attr({
+    .attr({
       	x: 50,
       	y: 50,
       	w: 10,
@@ -649,7 +597,8 @@ Crafty.c('Ellipse', {
       	lineWidth: 5,
       	strokeStyle: "#FFFFFF",
       	onClose: 'stroke'
-      });
+    });
+    this.drawFunctions.push(this._ellipse_draw);
   },
 
   _ellipse_draw: function(data) {

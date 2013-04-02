@@ -1,14 +1,16 @@
 // A store for global game objects
-var Game = {
-	KernelPanic: null,
-	player: null,
-	graph: null,
-	hud: null
-};
+var KernelPanic = null;
 
 // A store for unchanging variables for reference throughout the game
 // Similar to Android's reference files
 var R = {
+	
+	States: {
+		none: 			-1,
+		move: 			 0,
+		chooseDirection: 1,
+	},
+	
 	Scene: {
 		loading: 'Loading',
 		error:   'Error',
