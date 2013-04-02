@@ -142,9 +142,7 @@ Crafty.c("MultiInput", {
 				this.trigger("KeyDown", { key: keyCode });
 			}
 		}
-
-		this.multi_enableControl();
-
+		
 		return this;
 	},
 

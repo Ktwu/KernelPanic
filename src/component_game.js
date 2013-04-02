@@ -230,19 +230,25 @@ Crafty.c('GameGraph', {
 		};
 	},
 	
-	enableState: function() {
+	gamegraph_enableDrawing: function() {
 		this.enableDrawing();
 		this.gamegraph_travelgraph.enableDrawing();
 		this.gamegraph_gameplayer.enableDrawing();
 		this.gamegraph_gameplayer.gameplayer_hud.enableDrawing();
-		this.transitionTo(this.lastState == R.States.none ? R.States.move : this.lastState);	
 	},
 	
-	disableState: function() {
+	gamegraph_disableDrawing: function() {
 		this.disableDrawing();
 		this.gamegraph_travelgraph.disableDrawing();
 		this.gamegraph_gameplayer.disableDrawing();
-		this.gamegraph_gameplayer.gameplayer_hud.disableDrawing();
+		this.gamegraph_gameplayer.gameplayer_hud.disableDrawing();	
+	},
+	
+	gamegraph_enableState: function() {
+		this.transitionTo(this.lastState == R.States.none ? R.States.move : this.lastState);	
+	},
+	
+	gamegraph_disableState: function() {
 		this.transitionTo(R.States.none);
 	},
 	
@@ -364,16 +370,15 @@ Crafty.c('GameLevel', {
 		this.graphs = [];
 		
 		// Callbacks to allow the graphs to scroll on graph change.
+		// When we switch between graphs, we disable input to both and render both.
 		this.onRegister[R.States.graphChange] = function(oldState, data) {
 			// Our data is the ID of the graph we're switching to.
 			this.toGraphI = data;
 			this.fromGraphI = oldState;
 			
 			if (this.fromGraphI < 0) {
-				console.log("uh, 0?");
 				this.widthToTravel = 0;
 			} else {
-				console.log("wooo enabled");
 				var thisGraph = this.graphs[this.fromGraphI];
 				var thatGraph = this.graphs[this.toGraphI];
 				
@@ -387,13 +392,21 @@ Crafty.c('GameLevel', {
 					
 				thatGraph.attr({
 					x: thisGraph.x + (this.widthToTravel * this.dirToTravel)
-				});				
-				this.graphs[this.toGraphI].enableState();
+				});
+				
+				this.graphs[this.fromGraphI].gamegraph_disableState();				
 			}
 			
+			this.graphs[this.toGraphI].gamegraph_enableDrawing();
 			this.bind('EnterFrame', this._gamelevel_graphChange);	
 		};
+		// After switching between graphs, disable drawing the older graph and
+		// enable control over the new graph.
 		this.onUnregister[R.States.graphChange] = function() {
+			if (this.fromGraphI >= 0) 
+				this.graphs[this.fromGraphI].gamegraph_disableDrawing();
+				
+			this.graphs[this.toGraphI].gamegraph_enableState();
 			this.unbind('EnterFrame', this._gamelevel_graphChange);
 		};
 	},
@@ -427,19 +440,12 @@ Crafty.c('GameLevel', {
 				start.x1, start.y1,
 				start.x2, start.y2
 			);
-			
-			//this.onRegister[i] = function() {
-			//	var canvas = Crafty.canvas._canvas;
-			//	Crafty.canvas.context.clearRect(0, 0, canvas.width, canvas.height);
-			//	this.graphs[this.currentState].enableState();		
-			//};
-			//this.onUnregister[i] = function() {
-			//	this.graphs[this.currentState].disableState();
-			//};
 		}
 		
-		this.graphs[0].enableState();
-		this.setCurrentState(0);
+		//this.graphs[0].graphgraph_enableState();
+		//this.graphs[0].gamegraph
+		//this.setCurrentState(0);
+		this.transitionTo(R.States.graphChange, 0);
 	},
 	
 	_gamelevel_keydown: function(e) {
@@ -459,7 +465,7 @@ Crafty.c('GameLevel', {
 			this.widthToTravel -= Math.abs(5 * this.dirToTravel);
 		} else {
 			if (this.fromGraphI >= 0)
-				this.graphs[this.fromGraphI].disableState();
+				this.graphs[this.fromGraphI].gamegraph_disableDrawing();
 			this.transitionTo(this.toGraphI);
 		}
 	},
