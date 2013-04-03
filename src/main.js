@@ -3,6 +3,7 @@ function main() {
 	Crafty.init(500,500);
 	Crafty.background('rgb(50,50,50)');
 	Crafty.canvas.init();
+	Crafty.viewport.clampToEntities = false;
 	
 	// Define our KernelPanic game reference
 	// that our game logic will reference for game state.

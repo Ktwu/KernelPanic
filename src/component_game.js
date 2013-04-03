@@ -275,6 +275,12 @@ Crafty.c('GameGraph', {
 	gamegraph_load: function(graph) {
 		var list = graph.list;
 		var v1, v2;
+		
+		this.graphdraw_vertexBaseX = graph.vertexBase[0];
+		this.graphdraw_vertexBaseY = graph.vertexBase[1];
+		this.gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
+		this.gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
+		
 		for (var i = 0; i < list.length; ++i) {
 			v1 = new Crafty.math.Vector2D(list[i][0][0], list[i][0][1]);
 			for (var j = 1; j < list[i].length; ++j) {
@@ -284,15 +290,22 @@ Crafty.c('GameGraph', {
 			}
 		}
 		
-		this.graphdraw_vertexBaseX = graph.vertexBase[0];
-		this.graphdraw_vertexBaseY = graph.vertexBase[1];
-		this.gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
-		this.gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
-		
 		var labels = graph.labels;
-		if (labels)
+		if (labels) {
 			for (var label in labels) {
 				this.graph_addLabel(label, labels[label]);
+			}
+		}
+		
+		var forks = graph.forks;
+		if (forks) {
+			for (var i = 0; i < forks.length; ++i) {
+				// Attach each fork entity to the graph
+				var fork = Crafty.e('Fork').attr({
+					x: forks[i][0],
+					y: forks[i][1]
+				});	
+			}
 		}
 		
 		return this;
@@ -359,8 +372,7 @@ Crafty.c('GameLevel', {
 	graphs: null,
 	fromGraphI: -1,
 	toGraphI: -1,
-	widthToTravel: 0,
-	dirToTravel: 0,
+	viewportSeekVehicle: null,
 	
 	init: function() {
 		// bind for game-specific functions
@@ -368,6 +380,7 @@ Crafty.c('GameLevel', {
 		.bind('EnterFrame', this._gamelevel_enterFrame)
 		.bind('KeyDown', this._gamelevel_keydown);
 		this.graphs = [];
+		this.viewportSeekVehicle = Crafty.e('Vehicle');
 		
 		// Callbacks to allow the graphs to scroll on graph change.
 		// When we switch between graphs, we disable input to both and render both.
@@ -376,29 +389,30 @@ Crafty.c('GameLevel', {
 			this.toGraphI = data;
 			this.fromGraphI = oldState;
 			
-			if (this.fromGraphI < 0) {
-				this.widthToTravel = 0;
-			} else {
-				var thisGraph = this.graphs[this.fromGraphI];
-				var thatGraph = this.graphs[this.toGraphI];
-				
-				if (this.toGraphI < this.fromGraphI) {
-					this.widthToTravel = Math.max(Crafty.canvas._canvas.width, thatGraph.w);
-					this.dirToTravel = -1;
-				} else {
-					this.widthToTravel = Math.max(Crafty.canvas._canvas.width, thisGraph.w);
-					this.dirToTravel = 1;
-				}
-					
-				thatGraph.attr({
-					x: thisGraph.x + (this.widthToTravel * this.dirToTravel)
-				});
-				
-				this.graphs[this.fromGraphI].gamegraph_disableState();				
-			}
+			var fromGraph = this.graphs[this.fromGraphI];
+			var toGraph = this.graphs[this.toGraphI];
+			var distance = 0;
 			
-			this.graphs[this.toGraphI].gamegraph_enableDrawing();
-			this.bind('EnterFrame', this._gamelevel_graphChange);	
+			toGraph.gamegraph_enableDrawing();
+			
+			if (this.fromGraphI >= 0) {				
+				distance = (this.toGraphI < this.fromGraphI) ?
+					-Math.max(Crafty.canvas._canvas.width, toGraph.w) :
+					Math.max(Crafty.canvas._canvas.width, fromGraph.w);
+				
+				fromGraph.gamegraph_disableState();		
+				toGraph.attr({
+					x: fromGraph.x + distance
+				});				
+			}
+				
+			if (this.fromGraphI >= 0) {
+				this.viewportSeekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
+				this.bind('EnterFrame', this._gamelevel_graphChange);
+			} else {
+				toGraph.gamegraph_enableState();
+				this.transitionTo(this.toGraphI);
+			} 	
 		};
 		// After switching between graphs, disable drawing the older graph and
 		// enable control over the new graph.
@@ -441,11 +455,9 @@ Crafty.c('GameLevel', {
 				start.x2, start.y2
 			);
 		}
-		
-		//this.graphs[0].graphgraph_enableState();
-		//this.graphs[0].gamegraph
-		//this.setCurrentState(0);
+
 		this.transitionTo(R.States.graphChange, 0);
+		return this;
 	},
 	
 	_gamelevel_keydown: function(e) {
@@ -456,14 +468,8 @@ Crafty.c('GameLevel', {
 	},
 	
 	_gamelevel_graphChange: function() {
-		// Scroll both our current state and new state to center on the new state.
-		if (this.widthToTravel > 0) {
-			// TODO speed function and disable input while switching
-			// TODO maybe float player between swap
-			this.graphs[this.toGraphI].x -= 5 * this.dirToTravel;
-			this.graphs[this.fromGraphI].x -= 5 * this.dirToTravel;
-			this.widthToTravel -= Math.abs(5 * this.dirToTravel);
-		} else {
+		// Scroll the viewport until we're centered on our new graph.
+		if (this.viewportSeekVehicle.seek()) {
 			if (this.fromGraphI >= 0)
 				this.graphs[this.fromGraphI].gamegraph_disableDrawing();
 			this.transitionTo(this.toGraphI);

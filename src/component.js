@@ -1,3 +1,74 @@
+Crafty.c('Vehicle', {
+	epsilon: 1,
+	
+	seeker: null,
+	target: null,
+	
+	velocity: null,
+		
+	maxForce: 2.3,
+	slowdownRadius: 100,
+	maxSpeed: 15.0,
+	
+	_targetPosition: null,
+	
+	init: function() {
+		this._targetPosition = new Crafty.math.Vector2D();
+		this.velocity = new Crafty.math.Vector2D(0,0);
+	},
+	
+	setSeek: function(seeker, target) {
+		this.seeker = seeker;
+		this.target = target;
+	},
+	
+	// Courtesy of http://natureofcode.com/book/chapter-6-autonomous-agents/
+	seek: function() {
+		this._targetPosition.x = this.target.x;
+		this._targetPosition.y = this.target.y;
+		
+		var dir = this._targetPosition.subtract(this.seeker);
+		var dist = dir.magnitude();
+		
+		if (dist < this.epsilon) {
+			this.seeker.x = this.target.x;
+			this.seeker.y = this.target.y;
+			this.velocity.x = 0;
+			this.velocity.y = 0;
+			return true;
+		}
+			
+		if (dist < this.slowdownRadius)
+			dir.scaleToMagnitude(dist/this.slowdownRadius * this.maxSpeed);
+		else
+			dir.scaleToMagnitude(this.maxSpeed);
+		
+		var force = dir.subtract(this.velocity);
+		if (force.magnitude() > this.maxForce)
+			force.scaleToMagnitude(this.maxForce);
+		
+		this.velocity.add(force);
+		if (this.velocity.magnitude() > this.maxSpeed)
+			this.velocity.scaleToMagnitude(this.maxSpeed);
+		
+		var x = this.seeker.x;
+		var y = this.seeker.y;
+		this.seeker.x += this.velocity.x;
+		this.seeker.y += this.velocity.y;
+		
+		// Unfortunately, Crafty rounds out the (x,y) coordinates of our viewport.
+		// We accomodate for this by manually jittering the x/y axes towards our target.
+		if (Math.round(this.seeker.x) == x && Math.round(this.seeker.y) == y) {
+			if (this.velocity.x > 0)
+				this.seeker.x += this.velocity.x / Math.abs(this.velocity.x);
+			if (this.velocity.y > 0)
+				this.seeker.y += this.velocity.y / Math.abs(this.velocity.y);
+		}
+		
+		return false;
+	},
+});
+
 Crafty.c('CustomDraw', {
 	drawFunctions: null,
 	ready: true,
@@ -472,7 +543,7 @@ Crafty.c('GraphDraw', {
 		var strokes = this._graphdraw_adjacencyList;
 		var ctx = data.ctx;
 		var pos = data.pos;
-		
+	    
 		ctx.strokeStyle = this.strokeStyle;
 		ctx.fillStyle = this.strokeStyle;
 		ctx.lineWidth = this.lineWidth;

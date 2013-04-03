@@ -3,7 +3,9 @@ Crafty.scene(R.Scene.game, function() {
 	// We'll create a game level which will contain all of the setup logic.
 	// Each level can take in an array of graphs to load.
 	// The player is placed on each graph.  Each graph also keeps track of the last place the player was on.
-	var LEVEL = Crafty.e('GameLevel').load([testLevel, level1]);
+	var LEVEL = Crafty.e('GameLevel').load([testLevel, level1, level2]);
+	var seeker = Crafty.e('seeker');
+	//Crafty.viewport.follow(LEVEL.graphs[0].gamegraph_gameplayer);
 });
 
 // Loading scene
