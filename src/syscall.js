@@ -1,14 +1,10 @@
 Crafty.c('Syscall', {
 	blinkStyle: '#FFFF00',
 	steadyStyle: '#FF0000',
+	syscallId: -1,
+	
 	_percent: 0,
-	
-	States: {
-		normal:  -1,
-		focused: -2,
-		none:    -3
-	},
-	
+
 	init: function() {
 		this.requires('GamePiece, Ellipse, StateMachine')
 		.attr({
@@ -21,41 +17,40 @@ Crafty.c('Syscall', {
 		
 		this.drawFunctions.push(this._syscall_changeGradient);
 		
-		this.onRegister[this.States.none] = function(e) {
+		this.onRegister[this.DISABLED_STATE] = function() {
 			this.unbind(R.States.playerMovement, this._syscall_checkForCollision);
 		};
-		this.onUnregister[this.States.none] = function() {
+		this.onUnregister[this.DISABLED_STATE] = function() {
 			this.bind(R.States.playerMovement, this._syscall_checkForCollision);
 		};
+		
+		this.onRegister[R.States.syscallFocused] = function() {
+			//console.log(syscall)
+			this._parent.trigger(R.Event.syscallFocused, {isFocused: true, syscall: this});
+		};
+		this.onUnregister[R.States.syscallFocused] = function() {
+			this._parent.trigger(R.Event.syscallFocused, {isFocused: false, syscall: this});
+		};
 
-		this.bind(R.States.playerMovement, this._syscall_checkForCollision);
-		this.setCurrentState(this.States.normal);
-	},
-	
-	disableState: function() {
-		this.transitionTo(this.States.none);
-	},
-	
-	enableState: function() {
-		this.transitionTo(this.lastState);
+		this.lastState = R.States.syscallNormal;
 	},
 	
 	_syscall_checkForCollision: function(player) {
 		if (Math.abs(player.x - this.x) < player.w/2+this.w/2
 			&& Math.abs(player.y - this.y) < player.h/2+this.h/2) {
 				// Did we collide?
-				if (this.currentState == this.States.normal) 
-					this.transitionTo(this.States.focused);
+				if (this.currentState == R.States.syscallNormal) 
+					this.transitionTo(R.States.syscallFocused);
 		} else {
 			// No collision?  We might need to tra
-			if (this.currentState == this.States.focused)
-				this.transitionTo(this.States.normal);
+			if (this.currentState == R.States.syscallFocused)
+				this.transitionTo(R.States.syscallNormal);
 		}
 	},
 	
 	_syscall_changeGradient: function() {
-		if (this.currentState == this.States.focused
-			|| (this.currentState == this.States.none && this.lastState == this.States.focused)) {
+		if (this.currentState == R.States.syscallFocused
+			|| (this.currentState == this.DISABLED_STATE && this.lastState == R.States.syscallFocused)) {
 			this._percent = (this._percent + 0.05) % 1;
 			var grd = Crafty.canvas.context.createRadialGradient(this.centerX(), this.centerY(), 0, this.centerX(), this.centerY(), this.w/2);
 			grd.addColorStop(1, this.steadyStyle);
@@ -72,10 +67,13 @@ Crafty.c('Exec', {
 	init: function() {
 		this.requires('Syscall');
 		
-		this.onRegister[this.States.focused] = function() {
+		/*this.onRegister[R.States.syscallFocused] = function() {
+			// When activated, the player should start back at the beginning of the map.
+			// The player should be replaced by another player that's at the top of the map.
+			// Automatic activation?  Or activate on s?
 		};		
-		this.onUnregister[this.States.focused] = function() {
-		};
+		this.onUnregister[R.States.syscallFocused] = function() {
+		};*/
 	}
 });
 
@@ -86,9 +84,9 @@ Crafty.c('Fork', {
 			steadyStyle: "#FF0000"
 		});
 		
-		this.onRegister[this.States.focused] = function() {
+		/*this.onRegister[R.States.syscallFocused] = function() {
 		};		
-		this.onUnregister[this.States.focused] = function() {
-		};
+		this.onUnregister[R.States.syscallFocused] = function() {
+		};*/
 	}
 });

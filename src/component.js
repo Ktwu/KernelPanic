@@ -71,6 +71,7 @@ Crafty.c('Vehicle', {
 
 Crafty.c('CustomDraw', {
 	drawFunctions: null,
+	isDrawingEnabled: false,
 	ready: true,
 	
 	init: function() {
@@ -79,41 +80,60 @@ Crafty.c('CustomDraw', {
 	},
 	
 	disableDrawing: function() {
-		this.ready = false;
+		if (!this.isDrawingEnabled)
+			return;
+			
+		this.isDrawingEnabled = false;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
 			this.unbind('Draw', this.drawFunctions[i]);
+		}
+		
+		if (this._children) {
+			for (var i = 0; i < this._children.length; ++i) {
+				if (this._children[i].disableDrawing)
+					this._children[i].disableDrawing();
+			}
 		}
 	},
 	
 	enableDrawing: function() {
-		this.ready = true;
+		if (this.isDrawingEnabled)
+			return;
+			
+		this.isDrawingEnabled = true;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
 			this.bind('Draw', this.drawFunctions[i]);
+		}
+		
+		if (this._children) {
+			for (var i = 0; i < this._children.length; ++i) {
+				if (this._children[i].enableDrawing)
+					this._children[i].enableDrawing();
+			}
 		}		
 	}
 });
 
 // Simple state machine.  Woooooo.
 Crafty.c('StateMachine', {
+	DISABLED_STATE: null,
+	lastState: null,
+	currentState: null,
+	
 	onRegister: null,
 	onUnregister: null,
 	
-	lastState: -1,
-	currentState: -1,
+	isMachineEnabled: false,
 	
 	init: function() {
 		this.onRegister = {};
 		this.onUnregister = {};
 	},
 	
-	setCurrentState: function(state, data) {
-		this.currentState = state;
-		if (this.onRegister[state]) {
-			this.onRegister[state].call(this, this.lastState, data);
-		}		
-	},
-	
 	transitionTo: function(state, data) {
+		if (!this.isMachineEnabled)
+			return false;
+			
 		if (this.onUnregister[this.currentState]) {
 			this.onUnregister[this.currentState].call(this, state, data);
 		}
@@ -124,7 +144,21 @@ Crafty.c('StateMachine', {
 		if (this.onRegister[state]) {
 			this.onRegister[state].call(this, this.lastState, data);
 		}
-	},	
+	},
+	
+	enableMachine: function(data, firstState) {
+		if (this.isMachineEnabled)
+			return;
+		this.isMachineEnabled = true;
+		this.transitionTo(firstState !== undefined ? firstState : this.lastState, data);
+	},
+	
+	disableMachine: function(data) {
+		if (!this.isMachineEnabled)
+			return;
+		this.transitionTo(null, data);
+		this.isMachineEnabled = false;
+	}
 });
 
 Crafty.c('Center', {

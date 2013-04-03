@@ -10,7 +10,10 @@ var R = {
 		move: 			 -2,
 		chooseDirection: -3,
 		graphChange:     -4,
-		playerMovement:  -5
+		playerMovement:  -5,
+		
+		syscallNormal:   -6,
+		syscallFocused:  -7,
 	},
 	
 	Scene: {
@@ -21,7 +24,8 @@ var R = {
 	
 	Event: {
 		sliderHit: 'SliderHit',
-		chooseDirection: 'ChooseDirection'
+		chooseDirection: 'ChooseDirection',
+		syscallFocused: 'SyscallFocused',
 	},
 	
 	Error: {
