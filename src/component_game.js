@@ -22,6 +22,7 @@ Crafty.c('GamePlayer', {
 	init: function() {
 		this.requires('GamePiece, Slider, Ellipse')
 		.bind(R.Event.sliderHit, this._gameplayer_sliderHit)
+		.bind("Moved", this._gameplayer_moved)
 		.attr({
 			lineWidth: 5,
 			onClose: 'fill',
@@ -75,6 +76,10 @@ Crafty.c('GamePlayer', {
 		// Ferry the data from us to our game logic.
 		this.gameplayer_graph.trigger(R.Event.sliderHit, data);
 	},
+	
+	_gameplayer_moved: function(data) {
+		this.gameplayer_graph.trigger(R.Event.playerMovement, data);
+	}
 });
 
 Crafty.c('GameHud', {
@@ -173,6 +178,7 @@ Crafty.c('GameHud', {
 Crafty.c('GameGraph', {
 	gamegraph_travelgraph: null,
 	gamegraph_gameplayer: null,
+	gamegraph_syscalls: null,
 	
 	init: function() {
 		this.requires('GamePiece, Graph, GraphDraw, StateMachine')
@@ -181,6 +187,8 @@ Crafty.c('GameGraph', {
 			lineWidth: 7, 
 			strokeStyle: "#FFFFFF"
 		});
+		
+		this.gamegraph_syscalls = {};
 		
 		// Add a function that traces the player's path.
 		this.drawFunctions.push(function(data) {
@@ -203,12 +211,14 @@ Crafty.c('GameGraph', {
 		this.onRegister[R.States.move] = function(state, data) {
 			var player = this.gamegraph_gameplayer;
 			player.multi_enableControl();
-			this.bind(R.Event.sliderHit, this._gamegraph_sliderHit);
+			this.bind(R.Event.sliderHit, this._gamegraph_sliderHit)
+			.bind(R.Event.playerMovment, this._gamegraph_checkForSyscall);
 		};
 		this.onUnregister[R.States.move] = function(state, data) {
 			var player = this.gamegraph_gameplayer;
 			player.multi_disableControl();
-			this.unbind(R.Event.sliderHit, this._gamegraph_sliderHit);
+			this.unbind(R.Event.sliderHit, this._gamegraph_sliderHit)
+			.unbind(R.Event.playerMovment, this._gamegraph_checkForSyscall);
 		};
 		
 		this.onRegister[R.States.chooseDirection] = function(state, data) {
@@ -235,13 +245,19 @@ Crafty.c('GameGraph', {
 		this.gamegraph_travelgraph.enableDrawing();
 		this.gamegraph_gameplayer.enableDrawing();
 		this.gamegraph_gameplayer.gameplayer_hud.enableDrawing();
+		
+		for (var i in this.gamegraph_syscalls)
+			this.gamegraph_syscalls[i].enableDrawing();
 	},
 	
 	gamegraph_disableDrawing: function() {
 		this.disableDrawing();
 		this.gamegraph_travelgraph.disableDrawing();
 		this.gamegraph_gameplayer.disableDrawing();
-		this.gamegraph_gameplayer.gameplayer_hud.disableDrawing();	
+		this.gamegraph_gameplayer.gameplayer_hud.disableDrawing();
+		
+		for (var i in this.gamegraph_syscalls)
+			this.gamegraph_syscalls[i].disableDrawing();
 	},
 	
 	gamegraph_enableState: function() {
@@ -297,14 +313,21 @@ Crafty.c('GameGraph', {
 			}
 		}
 		
-		var forks = graph.forks;
-		if (forks) {
-			for (var i = 0; i < forks.length; ++i) {
-				// Attach each fork entity to the graph
-				var fork = Crafty.e('Fork').attr({
-					x: forks[i][0],
-					y: forks[i][1]
-				});	
+		var syscalls = graph.syscalls;
+		var absPos = this.gamegraph_vertexBase();
+		var i = 0;
+		if (syscalls) {
+			for (var syscall in syscalls) {
+				for (var j = 0; j < syscalls[syscall].length; ++j) {
+					// Attach each syscall entity to the graph
+					this.gamegraph_syscalls[i] = Crafty.e(syscall).centerOn(
+						syscalls[syscall][j][0] + absPos._x,
+						syscalls[syscall][j][1] + absPos._y
+					);
+					console.log(this.gamegraph_syscalls[i]);
+					this.attach(this.gamegraph_syscalls[i]);
+					++i;	
+				}
 			}
 		}
 		
@@ -366,6 +389,21 @@ Crafty.c('GameGraph', {
 			this.transitionTo(R.States.move);
 		}
 	},
+	
+	_gamegraph_checkForSyscall: function(e) {
+		var player = this.gamegraph_gameplayer;
+		for (var i in this.gamegraph_syscalls) {
+			// Are we colliding with a syscall?
+			var syscall = this.gamegraph_syscalls[i]
+			if (Math.abs(player.x - syscall.x) < player.w/2+syscall.w/2
+				&& Math.abs(player.y - syscall.y) < player.h/2+syscall.h/2) {
+				delete this.gamegraph_syscalls[i];
+				
+				syscall.disableDrawing();
+				syscall.destroy();
+			}
+		}
+	}
 });
 
 Crafty.c('GameLevel', {

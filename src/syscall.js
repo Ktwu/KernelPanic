@@ -21,6 +21,9 @@ Crafty.c('Exec', {
 
 Crafty.c('Fork', {
 	init: function() {
-		this.requires('Syscall');
+		this.requires('Syscall')
+		.attr({
+			fillStyle: "#FF0000"
+		});
 	}
 });

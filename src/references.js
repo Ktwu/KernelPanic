@@ -9,7 +9,8 @@ var R = {
 		none: 			 -1,
 		move: 			 -2,
 		chooseDirection: -3,
-		graphChange:     -4
+		graphChange:     -4,
+		playerMovement:  -5
 	},
 	
 	Scene: {
@@ -127,7 +128,9 @@ var level2 = {
 		start: {x1:150,y1:0, x2:150,y2:100}
 	},
 	
-	forks: [ [150,200], [150,600] ],
+	syscalls: {
+		Fork: [ [150,0], [150,200] ]
+	},
 	
 	strokeStyle: '#FFFFFF',
 	lineWidth: 3
