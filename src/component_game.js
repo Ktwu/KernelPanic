@@ -12,8 +12,6 @@ Crafty.c('GamePiece', {
 	}
 });
 
-
-
 Crafty.c('GamePlayer', {
 	gameplayer_graph: null,
 	gameplayer_hud: null,
@@ -238,6 +236,16 @@ Crafty.c('GameGraph', {
 			hud.visible = false;
 			this.unbind('KeyDown', this._gamegraph_waitForHudChoice);
 		};
+		
+		this.onRegister[R.States.none] = function() {
+			for (var i in this.gamegraph_syscalls) {
+				this.gamegraph_syscalls[i].disableState();
+			}
+		};
+		this.onUnregister[R.States.none] = function() {
+			for (var i in this.gamegraph_syscalls)
+				this.gamegraph_syscalls[i].enableState();			
+		};
 	},
 	
 	gamegraph_enableDrawing: function() {
@@ -324,7 +332,6 @@ Crafty.c('GameGraph', {
 						syscalls[syscall][j][0] + absPos._x,
 						syscalls[syscall][j][1] + absPos._y
 					);
-					console.log(this.gamegraph_syscalls[i]);
 					this.attach(this.gamegraph_syscalls[i]);
 					++i;	
 				}
@@ -391,17 +398,9 @@ Crafty.c('GameGraph', {
 	},
 	
 	_gamegraph_checkForSyscall: function(e) {
-		var player = this.gamegraph_gameplayer;
+		// Let each syscall check whether they're colliding with the player or not
 		for (var i in this.gamegraph_syscalls) {
-			// Are we colliding with a syscall?
-			var syscall = this.gamegraph_syscalls[i]
-			if (Math.abs(player.x - syscall.x) < player.w/2+syscall.w/2
-				&& Math.abs(player.y - syscall.y) < player.h/2+syscall.h/2) {
-				delete this.gamegraph_syscalls[i];
-				
-				syscall.disableDrawing();
-				syscall.destroy();
-			}
+			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_gameplayer);
 		}
 	}
 });
