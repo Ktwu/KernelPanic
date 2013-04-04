@@ -28,7 +28,6 @@ Crafty.c('Syscall', {
 		};
 		
 		this.onRegister[R.States.syscallFocused] = function() {
-			//console.log(syscall)
 			this._parent.trigger(R.Event.syscallFocused, {isFocused: true, syscall: this});
 		};
 		this.onUnregister[R.States.syscallFocused] = function() {
@@ -67,9 +66,6 @@ Crafty.c('Syscall', {
 });
 
 Crafty.c('Exec', {
-	_exec_oldPlayer: null,
-	_exec_newPlayer: null,
-	
 	init: function() {
 		this.requires('Syscall')
 		.attr({
@@ -124,10 +120,6 @@ Crafty.c('Exec', {
 		// Time to set our level to action!
 		KernelPanic.currentLevel.transitionTo(R.States.syscallActive);
 	},
-	
-	_exec_action: function() {
-		
-	}
 });
 
 Crafty.c('Fork', {
@@ -137,5 +129,43 @@ Crafty.c('Fork', {
 			steadyStyle: "#FF0000",
 			syscallName: 'Fork'
 		});
+	}
+});
+
+Crafty.c('Vanish', {
+	_vanish_graph: null,
+	_vanish_oldI: 0,
+	
+	init: function() {
+		this.requires('Syscall')
+		.attr({
+			steadyStyle: "#FF00FF",
+			syscallName: 'Vanish'
+		})
+		.bind(R.Event.syscallActivate, this._vanish_activate);
+	},
+	
+	// The Vanish mechanic causes everything to fade from view, which means playing with alphas.
+	// Afterwards we swap to another graph and destroy the one that vanished.
+	// TODO decrease visibility of entire graph
+	_vanish_activate: function(graph) {	
+		// Graph, we don't want any input from you
+		graph.transitionTo(R.States.syscallActive);
+		graph._activeSyscall = null;
+
+		this._vanish_graph = graph;
+		this._vanish_oldI = KernelPanic.currentLevel.currentI;
+		this.bind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
+		
+		// Time to set our level to action!
+		KernelPanic.currentLevel.gamelevel_toNextGraph();
+	},
+	
+	_vanish_removeGraph: function() {
+		KernelPanic.currentLevel.graphs.splice(this._vanish_oldI, 1);
+		--KernelPanic.currentLevel.currentI;
+		
+		this.unbind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
+		this._vanish_graph.destroy();		
 	}
 });

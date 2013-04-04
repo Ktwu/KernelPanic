@@ -30,6 +30,7 @@ var R = {
 		chooseDirection: 'ChooseDirection',
 		syscallFocused: 'SyscallFocused',
 		syscallActivate: 'SyscallActivate',
+		levelGraphSwitched: 'LevelGraphSwitched'
 	},
 	
 	Error: {
@@ -81,8 +82,13 @@ var testLevel = {
 	],
 	
 	vertexBase: [25,-100],
+	
 	labels: {
 		start: {x1:150,y1:0, x2:150,y2:100}
+	},
+	
+	syscalls: {
+		Vanish: [ [150,100] ]
 	},
 	
 	strokeStyle: '#FFFFFF',

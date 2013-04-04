@@ -497,6 +497,11 @@ Crafty.c('GameLevel', {
 				this.graphs[this.fromGraphI].disableDrawing();				
 			this.graphs[this.toGraphI].enableMachine();
 			this.unbind('EnterFrame', this._gamelevel_graphChange);
+			
+			Crafty.trigger(R.Event.levelGraphSwitched, {
+				oldGraph: (this.fromGraphI >= 0) ? this.graphs[this.fromGraphI] : null,
+				newGraph: this.graphs[this.toGraphI]
+			});
 		};
 	},
 	
@@ -541,10 +546,15 @@ Crafty.c('GameLevel', {
 		return player;	
 	},
 	
+	gamelevel_toNextGraph: function() {
+		if (this.graphs.length > 1)
+			this.transitionTo(R.States.graphChange, (this.currentI+ 1) % this.graphs.length);
+	},
+	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
 		if (key == 'S' && this.currentState != R.States.graphChange) {
-			this.transitionTo(R.States.graphChange, (this.currentI+ 1) % this.graphs.length);
+			this.gamelevel_toNextGraph();
 		}	
 	},
 	
