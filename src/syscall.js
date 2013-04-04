@@ -1,6 +1,7 @@
 Crafty.c('Syscall', {
-	blinkStyle: '#FFFF00',
-	steadyStyle: '#FF0000',
+	syscallName: null,
+	blinkStyle: null,
+	steadyStyle: null,
 	syscallId: -1,
 	
 	_percent: 0,
@@ -10,6 +11,8 @@ Crafty.c('Syscall', {
 		.attr({
 			lineWidth: 2,
 			fillStyle: "#0000FF",
+			blinkStyle: '#FFFF00',
+			steadyStyle: '#0000FF',
 			onClose: 'fill',
 			w: 35,
 			h: 35,
@@ -64,16 +67,66 @@ Crafty.c('Syscall', {
 });
 
 Crafty.c('Exec', {
+	_exec_oldPlayer: null,
+	_exec_newPlayer: null,
+	
 	init: function() {
-		this.requires('Syscall');
+		this.requires('Syscall')
+		.attr({
+			syscallName: 'Exec'
+		})
+		.bind(R.Event.syscallActivate, this._exec_activate);
+	},
+	
+	_exec_activate: function(graph) {		
+		// Graph, we don't want any input from you.  Shut up for a bit.
+		graph.transitionTo(R.States.syscallActive);
+		graph._activeSyscall = null;
 		
-		/*this.onRegister[R.States.syscallFocused] = function() {
-			// When activated, the player should start back at the beginning of the map.
-			// The player should be replaced by another player that's at the top of the map.
-			// Automatic activation?  Or activate on s?
-		};		
-		this.onUnregister[R.States.syscallFocused] = function() {
-		};*/
+		// We're going to create another player up at the top of the graph, back at start.
+		// We'll then get the graph to scroll back up to the top.  Then, we'll
+		// get rid of the old player.
+		var exec = this;
+		var oldPlayer = graph.gamegraph_gameplayer;
+		var newPlayer = KernelPanic.currentLevel.gamelevel_createPlayer(graph);
+		newPlayer.enableDrawing();
+		
+		// Keep the old player attached to the graph
+		graph.attach(oldPlayer);
+		
+		// Communicate our behavior to the current level to scroll back to y = 0!
+		// And we sort of do this by hijacking its state machine.  Totally legit!
+		var seekFunction = function() {
+			if (this.seekVehicle.seek())
+				this.transitionTo(R.States.levelNormal);
+		};
+		
+		KernelPanic.currentLevel.onRegister[R.States.syscallActive] = function() {
+			// Remember, the context this is called in is the level.
+			this.seekVehicle.setSeek(graph, {x: graph.x, y: 0});
+			this.bind('EnterFrame', seekFunction);
+		};
+		KernelPanic.currentLevel.onUnregister[R.States.syscallActive] = function() {
+			this.unbind('EnterFrame', seekFunction);
+			
+			// Exec, stop freaking out, you're no longer active.
+			// In fact, we're getting rid of you
+			exec.transitionTo(R.States.syscallNormal);
+			delete graph.gamegraph_syscalls[exec.syscallId];
+			exec.destroy();
+			
+			// Kill the old player.
+			graph.detach(oldPlayer);
+			oldPlayer.destroy();
+			graph.transitionTo(R.States.move);
+		};
+		
+		// Time to set our level to action!
+		KernelPanic.currentLevel.transitionTo(R.States.syscallActive);
+	},
+	
+	_exec_action: function() {
+		
 	}
 });
 
@@ -81,12 +134,8 @@ Crafty.c('Fork', {
 	init: function() {
 		this.requires('Syscall')
 		.attr({
-			steadyStyle: "#FF0000"
+			steadyStyle: "#FF0000",
+			syscallName: 'Fork'
 		});
-		
-		/*this.onRegister[R.States.syscallFocused] = function() {
-		};		
-		this.onUnregister[R.States.syscallFocused] = function() {
-		};*/
 	}
 });

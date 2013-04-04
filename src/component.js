@@ -712,7 +712,7 @@ Crafty.c('Ellipse', {
     });
     this.drawFunctions.push(this._ellipse_draw);
   },
-
+  
   _ellipse_draw: function(data) {
   	// We currently don't support drawing to the DOM directly
   	if (data.type == 'DOM')
@@ -720,23 +720,29 @@ Crafty.c('Ellipse', {
   		
   	var ctx = data.ctx;
   	var pos = data.pos;
+  	var x = pos._x;
+  	var y = pos._y;
+  	var w = pos._w;
+  	var h = pos._h;		
 
 	// The arc function draws around a central point.  We need to translate our (x,y), the top-left of our
 	// render rectangle, to the center, then calculate the real width/height of our sphere.
-	pos._x += pos._w/2;
-	pos._y += pos._h/2;
-	pos._h = (pos._h - this.lineWidth) / 2;
-	pos._w = (pos._w - this.lineWidth) / 2;
+	// Mutate our local variables.  If we modify the values in our data packet, we'll mess up other
+	// draw functions.
+	x += w/2;
+	y += h/2;
+	h = (h - this.lineWidth) / 2;
+	w = (w - this.lineWidth) / 2;
 	
   	// Save the context, set up our arc, restore our path transformation, then stroke
-  	// to prevent the stroke from being distorted by scaling
+  	// to prevent the stroke from being distorted by scaling			
   	ctx.strokeStyle = this.strokeStyle;
   	ctx.fillStyle = this.fillStyle;
   	ctx.lineWidth = this.lineWidth;
   	ctx.save();
-	ctx.scale(pos._w, pos._h);
+	ctx.scale(w, h);
 	ctx.beginPath();
-	ctx.arc(pos._x / pos._w, pos._y / pos._h, 1, 0, Math.PI*2, false);
+	ctx.arc(x / w, y / h, 1, 0, Math.PI*2, false);
 	ctx.restore();
 	
 	// Stroke or fill

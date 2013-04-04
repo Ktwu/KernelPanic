@@ -84,6 +84,8 @@ Crafty.c('GameHud', {
 	gameHud_startVertex: null,
 	gameHud_keyMap: null,
 	gameHud_displacement: 20,
+	gameHud_center: "",
+	gameHud_syscallKey: "SPACE",
 	_gameHud_keyList: ['D', 'C', 'X', 'Z', 'A', 'Q', 'W', 'E'],
 	_gameHud_angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
 	
@@ -100,6 +102,7 @@ Crafty.c('GameHud', {
 		});
 		
 		this.drawFunctions.push(this._gameHud_draw);
+		this.drawFunctions.unshift(this._gameHud_drawSyscall);
 		this.gameHud_keyMap = {};
 	},
 	
@@ -107,7 +110,10 @@ Crafty.c('GameHud', {
 		this.gameHud_keyMap = {};
 	},
 	
-	gameHud_load: function(edgeset) {
+	gameHud_load: function(data) {
+		var edgeset = data.edgeSet;
+		this.gameHud_center = data.center;
+		
 		this.gameHud_startVertex = edgeset.startVertex;
 		var ends = edgeset.endVertices;
 		var angle;
@@ -155,10 +161,36 @@ Crafty.c('GameHud', {
 		}
 	},
 	
+	_gameHud_drawSyscall: function(data) {
+		var ctx = data.ctx;
+		
+		if (this.gameHud_center === null)
+			return;
+			
+		ctx.save();
+		
+		// draw a black bar in the middle of our thing
+		ctx.fillStyle = this.strokeStyle;			
+		var x = data.pos._x + this.lineWidth/2;
+		var y = data.pos._y + (data.pos._h-this.lineWidth)/2;
+		var w = data.pos._w - this.lineWidth;
+		var h = this.lineWidth;
+		ctx.fillRect(x, y, w, h);	
+		
+		ctx.fillStyle = "#FFFFFF";
+		ctx.font = "bold 12px sans-serif";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.fillText(this.gameHud_center + "", this.centerX(), this.centerY());	
+		
+		ctx.restore();		
+	},
+	
 	_gameHud_draw: function(data) {
 		var ctx = data.ctx;
 		
 		ctx.save();
+		
 		ctx.fillStyle = "#FF0000";
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
@@ -209,14 +241,12 @@ Crafty.c('GameGraph', {
 		
 		// Set up our graph's input states
 		this.onRegister[R.States.move] = function(state, data) {
-			console.log('register move');
 			var player = this.gamegraph_gameplayer;
 			player.multi_enableControl();
 			this.bind(R.Event.sliderHit, this._gamegraph_sliderHit)
 			.bind(R.Event.playerMovment, this._gamegraph_checkForSyscall);
 		};
 		this.onUnregister[R.States.move] = function(state, data) {
-			console.log('unregister move');
 			var player = this.gamegraph_gameplayer;
 			player.multi_disableControl();
 			this.unbind(R.Event.sliderHit, this._gamegraph_sliderHit)
@@ -224,7 +254,6 @@ Crafty.c('GameGraph', {
 		};
 		
 		this.onRegister[R.States.chooseDirection] = function(state, data) {
-			console.log('register choose');
 			var hud = this.gamegraph_gameplayer.gameplayer_hud;
 			hud.visible = true;
 			if (data) {
@@ -234,20 +263,18 @@ Crafty.c('GameGraph', {
 			this.bind('KeyDown', this._gamegraph_waitForHudChoice);
 		};
 		this.onUnregister[R.States.chooseDirection] = function(state, data) {
-			console.log('unregister choose');
 			var hud = this.gamegraph_gameplayer.gameplayer_hud;
-			hud.visible = false;
+			if (state !== this.DISABLED_STATE)
+				hud.visible = false;
 			this.unbind('KeyDown', this._gamegraph_waitForHudChoice);
 		};
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
-			console.log('disabled');
 			this.unbind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].disableMachine();
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
-			console.log('enabled');
 			this.bind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();		
@@ -361,18 +388,16 @@ Crafty.c('GameGraph', {
 		}
 		
 		// Are any of our syscalls active?  If so, we want to allow the player to activate the syscall
-		if (this.gamegraph_syscalls) {
-			for (var i in this.gamegraph_syscalls) {
-				if (this.gamegraph_syscalls[i].currentState == R.States.syscallFocused) {
-					
-				}
-			}
-		}
+		var data = {
+			edgeSet: edgeSet,
+			center: (this._activeSyscall) ? this._activeSyscall.syscallName : null,
+		};
 		
 		if (!vertices) {
 			player.gameplayer_putOnLine(data.x, data.y, data.otherX, data.otherY);
+			console.log("WHY ARE THERE NO VERTICES");
 		} else {
-			this.transitionTo(R.States.chooseDirection, edgeSet);
+			this.transitionTo(R.States.chooseDirection, data);
 		} 
 	},
 	
@@ -384,6 +409,8 @@ Crafty.c('GameGraph', {
 			var start = player.gameplayer_hud.gameHud_startVertex;
 			player.gameplayer_putOnLine(start.x, start.y, end.x, end.y);
 			this.transitionTo(R.States.move);
+		} else if (this._activeSyscall && key == player.gameplayer_hud.gameHud_syscallKey) {
+			this._activeSyscall.trigger(R.Event.syscallActivate, this);
 		}
 	},
 	
@@ -397,13 +424,12 @@ Crafty.c('GameGraph', {
 	_gamegraph_syscallFocused: function(e) {
 		// We may change our focus to a new syscall, otherwise if we lose focus
 		// we set our active syscall to null.
-		console.log(e);
 		if (e.isFocused) {
-			this._activeSyscall = e;
+			this._activeSyscall = e.syscall;
 		} else if (e.syscall == this._activeSyscall) {
-			delete this.gamegrapp_syscalls[e.syscall.syscallId];
-			e.syscall.destroy();
-			//this._activeSyscall = null;
+			//delete this.gamegraph_syscalls[e.syscall.syscallId];
+			//e.syscall.destroy();
+			this._activeSyscall = null;
 		}
 	}
 });
@@ -412,22 +438,31 @@ Crafty.c('GameLevel', {
 	graphs: null,
 	fromGraphI: -1,
 	toGraphI: -1,
-	viewportSeekVehicle: null,
+	currentI: -1,
+	seekVehicle: null,
 	
 	init: function() {
 		// bind for game-specific functions
-		this.requires('StateMachine')
-		.bind('EnterFrame', this._gamelevel_enterFrame)
-		.bind('KeyDown', this._gamelevel_keydown);
+		this.requires('StateMachine');
 		this.graphs = [];
-		this.viewportSeekVehicle = Crafty.e('Vehicle');
+		this.seekVehicle = Crafty.e('Vehicle');
 		
 		// Callbacks to allow the graphs to scroll on graph change.
 		// When we switch between graphs, we disable input to both and render both.
+		this.onRegister[R.States.levelNormal] = function(oldState, data) {
+			this.bind('EnterFrame', this._gamelevel_enterFrame)
+			.bind('KeyDown', this._gamelevel_keydown);
+		};
+		this.onUnregister[R.States.levelNormal] = function() {
+			this.unbind('EnterFrame', this._gamelevel_enterFrame)
+			.unbind('KeyDown', this._gamelevel_keydown);
+		};
+		
 		this.onRegister[R.States.graphChange] = function(oldState, data) {
 			// Our data is the ID of the graph we're switching to.
 			this.toGraphI = data;
-			this.fromGraphI = oldState === this.DISABLED_STATE ? -1 : oldState;
+			this.fromGraphI = this.currentI;
+			this.currentI = this.toGraphI;
 			
 			var fromGraph = this.graphs[this.fromGraphI];
 			var toGraph = this.graphs[this.toGraphI];
@@ -448,19 +483,18 @@ Crafty.c('GameLevel', {
 				
 			if (this.fromGraphI >= 0) {
 				fromGraph.disableMachine();
-				this.viewportSeekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
+				this.seekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
 				this.bind('EnterFrame', this._gamelevel_graphChange);
 			} else {
 				toGraph.enableMachine();
-				this.transitionTo(this.toGraphI);
+				this.transitionTo(R.States.levelNormal);
 			} 	
 		};
 		// After switching between graphs, disable drawing the older graph and
 		// enable control over the new graph.
 		this.onUnregister[R.States.graphChange] = function() {
 			if (this.fromGraphI >= 0)
-				this.graphs[this.fromGraphI].disableDrawing();
-				
+				this.graphs[this.fromGraphI].disableDrawing();				
 			this.graphs[this.toGraphI].enableMachine();
 			this.unbind('EnterFrame', this._gamelevel_graphChange);
 		};
@@ -481,50 +515,54 @@ Crafty.c('GameLevel', {
 				strokeStyle: "#00FF66"
 			});
 			
-			// Set the level's player.  We might change this depending on whether
-			// it's better to render the player multiple times.
-			var player = Crafty.e('GamePlayer').multi_disableControl();
-			var start = this.graphs[i].graph_labelSet('start');
-			var hud = Crafty.e('GameHud').centerOn(player.centerX(), player.centerY());
-			
-			player.gameplayer_setGraph(this.graphs[i]);
-			this.graphs[i].gamegraph_setPlayer(player);
-			this.graphs[i].gamegraph_gameplayer.gameplayer_setHud(hud);
-			
-			player.gameplayer_putOnLine(
-				start.x1, start.y1,
-				start.x2, start.y2
-			);
+			this.gamelevel_createPlayer(this.graphs[i]);
 		}
 
 		this.enableMachine(0, R.States.graphChange);
 		return this;
 	},
 	
+	gamelevel_createPlayer: function(graph) {
+		// Set the level's player.  We might change this depending on whether
+		// it's better to render the player multiple times.
+		var player = Crafty.e('GamePlayer').multi_disableControl();
+		var start = graph.graph_labelSet('start');
+		var hud = Crafty.e('GameHud').centerOn(player.centerX(), player.centerY());
+			
+		player.gameplayer_setGraph(graph);
+		graph.gamegraph_setPlayer(player);
+		graph.gamegraph_gameplayer.gameplayer_setHud(hud);
+			
+		player.gameplayer_putOnLine(
+			start.x1, start.y1,
+			start.x2, start.y2
+		);
+		
+		return player;	
+	},
+	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
 		if (key == 'S' && this.currentState != R.States.graphChange) {
-			this.transitionTo(R.States.graphChange, (this.currentState + 1) % this.graphs.length);
+			this.transitionTo(R.States.graphChange, (this.currentI+ 1) % this.graphs.length);
 		}	
 	},
 	
 	_gamelevel_graphChange: function() {
 		// Scroll the viewport until we're centered on our new graph.
-		if (this.viewportSeekVehicle.seek()) {
-			this.transitionTo(this.toGraphI);
+		if (this.seekVehicle.seek()) {
+			this.transitionTo(R.States.levelNormal);
 		}
 	},
 	
 	_gamelevel_enterFrame: function() {
-		// Why the fuck not.
-		if (this.isMachineEnabled && this.currentState >= 0 && this.currentState < this.graphs.length) {
-			this.graphs[this.currentState].attr({
-				//lineWidth: Game.graph.lineWidth + 0.02,
-				y: this.graphs[this.currentState].y - 0.5
-			});
-			var player = this.graphs[this.currentState].gamegraph_gameplayer;
-			if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height)
-				console.log("death death death");
-		}
+		this.graphs[this.currentI].attr({
+			y: this.graphs[this.currentI].y - 0.5
+		});
+		
+		// TODO At some point we need some real death.
+		var player = this.graphs[this.currentI].gamegraph_gameplayer;
+		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height)
+			console.log("death death death");
 	}
 });

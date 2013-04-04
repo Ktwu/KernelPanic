@@ -14,6 +14,9 @@ var R = {
 		
 		syscallNormal:   -6,
 		syscallFocused:  -7,
+		syscallActive:   -8,
+		
+		levelNormal:     -9
 	},
 	
 	Scene: {
@@ -26,6 +29,7 @@ var R = {
 		sliderHit: 'SliderHit',
 		chooseDirection: 'ChooseDirection',
 		syscallFocused: 'SyscallFocused',
+		syscallActivate: 'SyscallActivate',
 	},
 	
 	Error: {
@@ -133,7 +137,8 @@ var level2 = {
 	},
 	
 	syscalls: {
-		Fork: [ [150,0], [150,200] ]
+		Fork: [ [150,0], [150,200] ],
+		Exec: [ [250, 200], [50, 600], [150,1500] ]
 	},
 	
 	strokeStyle: '#FFFFFF',
