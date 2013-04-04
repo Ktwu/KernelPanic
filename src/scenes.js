@@ -1,10 +1,22 @@
 Crafty.scene(R.Scene.game, function() {
-	
-	// We'll create a game level which will contain all of the setup logic.
-	// Each level can take in an array of graphs to load.
-	// The player is placed on each graph.  Each graph also keeps track of the last place the player was on.
 	KernelPanic.currentLevel = Crafty.e('GameLevel').load([testLevel, level1, level2]);
-	//Crafty.viewport.follow(LEVEL.graphs[0].gamegraph_gameplayer);
+});
+
+Crafty.scene(R.Scene.intro, function() {
+	Crafty.e('2D, DOM, Text').text('Press Space to Start').attr({
+		x : 0,
+		y : Crafty.canvas._canvas.height / 2 - 24,
+		w : Crafty.canvas._canvas.width
+	}).css(R.CSS.$text);
+	
+	var fun = function(e) {
+		if (e.key == Crafty.keys.SPACE) {
+			this.unbind('KeyDown', fun);
+			Crafty.scene(R.Scene.game);
+		}
+	};
+	
+	this.bind('KeyDown', fun);
 });
 
 // Loading scene
@@ -28,7 +40,8 @@ Crafty.scene(R.Scene.loading, function() {
 		// Then add our audio to Crafty.  Use mp3, ogg, and aac formats.
 	
 		// Start the game
-		Crafty.scene(R.Scene.game);
+		Crafty.scene(R.Scene.intro);
+		//Crafty.scene(R.Scene.game);
 	}
 }); 
 
