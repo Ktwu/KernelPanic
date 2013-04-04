@@ -152,13 +152,28 @@ Crafty.c('Vanish', {
 		// Graph, we don't want any input from you
 		graph.transitionTo(R.States.syscallActive);
 		graph._activeSyscall = null;
+		
+		// Ask our level to execute the following function
+		var fadeFunction = function() {
+			var alpha = Math.max(graph.gamegraph_gameplayer.alpha - 0.02, 0);
+			graph.cascadePropertySet({alpha: alpha});
+			if (alpha == 0)
+				this.gamelevel_toNextGraph();
+		};
+		
+		KernelPanic.currentLevel.onRegister[R.States.syscallActive] = function() {
+			this.bind('EnterFrame', fadeFunction);
+		};
+		KernelPanic.currentLevel.onUnregister[R.States.syscallActive] = function() {
+			this.unbind('EnterFrame', fadeFunction);
+		};
 
 		this._vanish_graph = graph;
 		this._vanish_oldI = KernelPanic.currentLevel.currentI;
 		this.bind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
 		
-		// Time to set our level to action!
-		KernelPanic.currentLevel.gamelevel_toNextGraph();
+	    // Time to set our level to action!
+		KernelPanic.currentLevel.transitionTo(R.States.syscallActive);		
 	},
 	
 	_vanish_removeGraph: function() {

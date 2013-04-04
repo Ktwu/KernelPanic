@@ -1,3 +1,29 @@
+Crafty.c('Cascader', {
+	cascadePropertySet: function(attrObj) {
+		this.attr(attrObj);
+		if (this._children) {
+			for (var i = 0; i < this._children.length; ++i) {
+				if (this._children[i].cascadePropertySet)
+					this._children[i].cascadePropertySet(attrObj);
+				else
+					this._children[i].attr(attrObj);
+			}
+		}
+	},
+	
+	cascadeMap: function(fun, data) {
+		fun.call(this, data);
+		if (this._children) {
+			for (var i = 0; i < this._children.length; ++i) {
+				if (this._children[i].cascadeMap)
+					this._children[i].cascadeMap(fun, data);
+				else
+					fun.call(this._children[i], data);
+			}
+		}
+	}
+});
+
 Crafty.c('Vehicle', {
 	epsilon: 1,
 	
@@ -487,6 +513,7 @@ Crafty.c('Slider', {
 Crafty.c('GraphDraw', {
 	strokeStyle: "#000000",
 	lineWidth: 1,
+	alpha: 1,
 	graphdraw_vertexBaseX: 0,
 	graphdraw_vertexBaseY: 0,
 	
@@ -578,6 +605,8 @@ Crafty.c('GraphDraw', {
 		var ctx = data.ctx;
 		var pos = data.pos;
 	    
+	    ctx.save();
+	    ctx.globalAlpha = this.alpha;
 		ctx.strokeStyle = this.strokeStyle;
 		ctx.fillStyle = this.strokeStyle;
 		ctx.lineWidth = this.lineWidth;
@@ -607,6 +636,7 @@ Crafty.c('GraphDraw', {
 	    }
 	    
 	    ctx.translate(-transX, -transY);
+	    ctx.restore();
 	}
 });
 
@@ -708,7 +738,8 @@ Crafty.c('Ellipse', {
       	h: 10,
       	lineWidth: 5,
       	strokeStyle: "#FFFFFF",
-      	onClose: 'stroke'
+      	onClose: 'stroke',
+      	alpha: 1
     });
     this.drawFunctions.push(this._ellipse_draw);
   },
@@ -735,7 +766,10 @@ Crafty.c('Ellipse', {
 	w = (w - this.lineWidth) / 2;
 	
   	// Save the context, set up our arc, restore our path transformation, then stroke
-  	// to prevent the stroke from being distorted by scaling			
+  	// to prevent the stroke from being distorted by scaling
+  	ctx.save();
+  	
+  	ctx.globalAlpha = this.alpha;			
   	ctx.strokeStyle = this.strokeStyle;
   	ctx.fillStyle = this.fillStyle;
   	ctx.lineWidth = this.lineWidth;
@@ -749,5 +783,6 @@ Crafty.c('Ellipse', {
 	ctx[this.onClose]();
 		
 	ctx.closePath();
+	ctx.restore();
   }
 });

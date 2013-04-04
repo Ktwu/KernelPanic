@@ -1,4 +1,8 @@
 Crafty.c('GamePiece', {
+	init: function() {
+		this.requires('Cascader');
+	},
+	
 	setGameProperty: function(propertyName, value) {
 		if (this[propertyName]) {
 			this.detach(this[propertyName]);
@@ -170,6 +174,7 @@ Crafty.c('GameHud', {
 		ctx.save();
 		
 		// draw a black bar in the middle of our thing
+		ctx.globalAlpha = this.alpha;
 		ctx.fillStyle = this.strokeStyle;			
 		var x = data.pos._x + this.lineWidth/2;
 		var y = data.pos._y + (data.pos._h-this.lineWidth)/2;
@@ -191,6 +196,7 @@ Crafty.c('GameHud', {
 		
 		ctx.save();
 		
+		ctx.globalAlpha = this.alpha;
 		ctx.fillStyle = "#FF0000";
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
@@ -226,6 +232,8 @@ Crafty.c('GameGraph', {
 		this.drawFunctions.push(function(data) {
 			var ctx = data.ctx;
 		
+			ctx.save();
+			ctx.globalAlpha = this.alpha;		
 			ctx.lineWidth = this.lineWidth;
 			ctx.strokeStyle = "#00FF00";
 			ctx.beginPath();
@@ -237,6 +245,7 @@ Crafty.c('GameGraph', {
 		   	
 		    ctx.closePath();
 		    ctx.stroke();
+		    ctx.restore();
 		});
 		
 		// Set up our graph's input states
