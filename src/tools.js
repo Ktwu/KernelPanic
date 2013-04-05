@@ -96,29 +96,4 @@ var Tools = {
 	isNegligableDiff: function (a,b) {
 		return Math.abs(a-b) < this.epsilon;
 	},
-	
-	// Uh.  Load a thing.
-	loadFile: function(urls) {
-		var files = {};
-		
-		var fileCount = 0;
-		var request;
-		
-		for (var i = 0; i < urls.length; ++i) {
-			request = new XMLHttpRequest();
-			request._url = urls[i];
-			request.onreadystatechange = function() {
-				if(this.readyState == 4) {
-			  		files[this._url] = (this.status == 200) ? this.responseText : null;
-				 
-				  	++fileCount;
-				  	if (fileCount == urls.length) {
-				  		Crafty.trigger(R.Event.fileLoaded, files);
-				  	}
-				}
-			}
-			request.open("GET", urls[i], true);
-			request.send();
-		}
-	}
 };

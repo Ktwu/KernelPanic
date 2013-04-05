@@ -28,7 +28,6 @@ var R = {
 	},
 	
 	Event: {
-		fileLoaded: 'FileLoaded',
 		sliderHit: 'SliderHit',
 		chooseDirection: 'ChooseDirection',
 		syscallFocused: 'SyscallFocused',

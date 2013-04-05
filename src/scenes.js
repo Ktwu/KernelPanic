@@ -4,7 +4,8 @@ Crafty.scene(R.Scene.game, function() {
 });
 
 Crafty.scene(R.Scene.intro, function() {
-	KernelPanic.UI.innerHTML = KernelPanic.UIFiles['assets/ui/intro.html'];
+	console.log(Crafty.assets);
+	KernelPanic.UI.innerHTML = Crafty.assets['assets/ui/intro.html'];
 	
 	var fun = function(e) {
 		if (e.key == Crafty.keys.SPACE) {
@@ -33,13 +34,7 @@ Crafty.scene(R.Scene.loading, function() {
 		
 	} else {
 		// Code to load UI files.
-		var onLoad = function(files) {
-			KernelPanic.UIFiles = files;
-			this.unbind(R.Event.fileLoaded, onLoad);
-			Crafty.scene(R.Scene.intro);
-		};
-		this.bind(R.Event.fileLoaded, onLoad);
-		Tools.loadFile(['assets/ui/intro.html', 'assets/ui/intro2.html']);
+		Crafty.load(['assets/ui/intro.html', 'assets/ui/intro2.html'], function() { Crafty.scene(R.Scene.intro); });
 	}
 }); 
 
