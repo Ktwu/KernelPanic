@@ -3,9 +3,10 @@ Crafty.scene(R.Scene.game, function() {
 	KernelPanic.currentLevel = Crafty.e('GameLevel').load([testLevel, level1, level2]);
 });
 
-Crafty.scene(R.Scene.intro, function() {
+Crafty.scene(R.Scene.prototype_intro, function() {
 	console.log(Crafty.assets);
-	KernelPanic.UI.innerHTML = Crafty.assets['assets/ui/intro.html'];
+	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.prototype_intro];
+	KernelPanic.UI.style['overflow-y'] = 'auto';
 	
 	var fun = function(e) {
 		if (e.key == Crafty.keys.SPACE) {
@@ -34,7 +35,8 @@ Crafty.scene(R.Scene.loading, function() {
 		
 	} else {
 		// Code to load UI files.
-		Crafty.load(['assets/ui/intro.html', 'assets/ui/intro2.html'], function() { Crafty.scene(R.Scene.intro); });
+		Crafty.load([R.UI.prototype_intro, R.UI.intro],
+		function() { Crafty.scene(R.Scene.prototype_intro); });
 	}
 }); 
 

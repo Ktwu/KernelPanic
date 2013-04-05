@@ -316,15 +316,18 @@ Crafty.c('GameGraph', {
 		var list = graph.list;
 		var v1, v2;
 		
-		this.graphdraw_vertexBaseX = graph.vertexBase[0];
-		this.graphdraw_vertexBaseY = graph.vertexBase[1];
+		var scaleX = KernelPanic.settings.scaleX;
+		var scaleY = KernelPanic.settings.scaleY;
+		
+		this.graphdraw_vertexBaseX = graph.vertexBase[0] * scaleX;
+		this.graphdraw_vertexBaseY = graph.vertexBase[1] * scaleY;
 		this.gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
 		this.gamegraph_travelgraph.graphdraw_vertexBaseY = this.graphdraw_vertexBaseY;
 		
 		for (var i = 0; i < list.length; ++i) {
-			v1 = new Crafty.math.Vector2D(list[i][0][0], list[i][0][1]);
+			v1 = new Crafty.math.Vector2D(list[i][0][0] * scaleX, list[i][0][1] * scaleY);
 			for (var j = 1; j < list[i].length; ++j) {
-				v2 = new Crafty.math.Vector2D(list[i][j][0], list[i][j][1]);
+				v2 = new Crafty.math.Vector2D(list[i][j][0] * scaleX, list[i][j][1] * scaleY);
 				this.graph_unsafeAddEdge(v1, v2);
 				this.graphdraw_tryAddEdge(v1, v2);
 			}
@@ -337,6 +340,14 @@ Crafty.c('GameGraph', {
 			}
 		}
 		
+		var start = {
+			x1: graph.start.x1 * scaleX,
+			x2: graph.start.x2 * scaleX,
+			y1: graph.start.y1 * scaleY,
+			y2: graph.start.y2 * scaleY
+		};
+		this.graph_addLabel('start', start);
+
 		var syscalls = graph.syscalls;
 		var absPos = this.gamegraph_vertexBase();
 		var i = 0;
@@ -345,8 +356,8 @@ Crafty.c('GameGraph', {
 				for (var j = 0; j < syscalls[syscall].length; ++j) {
 					// Attach each syscall entity to the graph
 					this.gamegraph_syscalls[i] = Crafty.e(syscall).centerOn(
-						syscalls[syscall][j][0] + absPos._x,
-						syscalls[syscall][j][1] + absPos._y
+						syscalls[syscall][j][0] * scaleX + absPos._x,
+						syscalls[syscall][j][1] * scaleY + absPos._y
 					);
 					this.attach(this.gamegraph_syscalls[i]);
 					this.gamegraph_syscalls[i].syscallId = i;

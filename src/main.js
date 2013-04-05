@@ -1,13 +1,10 @@
 function main() {
 	// Init everything
-	Crafty.init(500,500);
+	//Crafty.init(500,500);
+	Crafty.init();
 	Crafty.background('rgb(50,50,50)');
 	Crafty.canvas.init();
 	Crafty.viewport.clampToEntities = false;
-	
-	// Define our KernelPanic game reference
-	// that our game logic will reference for game state.
-	KernelPanic = Crafty.e('KernelPanic');
 	
 	// Create a UI div for use in our game.
 	// It's just a regular div -- the innards can be set to equal whatever

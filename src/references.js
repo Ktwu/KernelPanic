@@ -1,9 +1,20 @@
 // A store for global game objects
-var KernelPanic = null;
+var KernelPanic = {
+	currentLevel: null,
+	UI: null,
+	settings: {
+		scaleX: 3,
+		scaleY: 1,
+	}
+};
 
 // A store for unchanging variables for reference throughout the game
 // Similar to Android's reference files
-var R = {
+var R = {	
+	UI: {
+		intro:				'assets/ui/intro.html',  
+		prototype_intro: 	'assets/ui/prototype_intro.html'
+	},
 	
 	States: {
 		none: 			 -1,
@@ -20,19 +31,19 @@ var R = {
 	},
 	
 	Scene: {
-		loading:  	'Loading',
-		error:    	'Error',
-		game:     	'Game',
-		intro:    	'Intro',
-		controls: 	'Controls'
+		loading:  				'Loading',
+		error:			    	'Error',
+		game:     				'Game',
+		prototype_intro:    	'Prototype_Intro',
+		controls: 				'Controls'
 	},
 	
 	Event: {
-		sliderHit: 'SliderHit',
-		chooseDirection: 'ChooseDirection',
-		syscallFocused: 'SyscallFocused',
-		syscallActivate: 'SyscallActivate',
-		levelGraphSwitched: 'LevelGraphSwitched'
+		sliderHit: 				'SliderHit',
+		chooseDirection: 		'ChooseDirection',
+		syscallFocused: 		'SyscallFocused',
+		syscallActivate: 		'SyscallActivate',
+		levelGraphSwitched: 	'LevelGraphSwitched'
 	},
 	
 	Error: {
@@ -84,8 +95,8 @@ var testLevel = {
 	
 	vertexBase: [25,-200],
 	
-	labels: {
-		start: {x1:150,y1:0, x2:150,y2:100}
+	start: {
+		x1:150, y1:0, x2:150, y2:100
 	},
 	
 	syscalls: {
@@ -115,8 +126,9 @@ var level1 = {
 	],
 	
 	vertexBase: [25,-200],
-	labels: {
-		start: {x1:150,y1:0, x2:150,y2:100}
+	
+	start: {
+		x1:150, y1:0, x2:150, y2:100
 	},
 	
 	syscalls: {
@@ -145,8 +157,9 @@ var level2 = {
 	],
 	
 	vertexBase: [25,-200],
-	labels: {
-		start: {x1:150,y1:0, x2:150,y2:100}
+	
+	start: {
+		x1:150, y1:0, x2:150, y2:100
 	},
 	
 	syscalls: {

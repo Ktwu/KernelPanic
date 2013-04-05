@@ -3,10 +3,11 @@ body {
 	text-align: center;
 	color: #DDD;
 	font-family: Arial;
+	margin: 0px;
 }
 
 #cr-stage {
-	margin: 20px auto 0;
+	margin: auto 0;
 }
 
 .controls {
