@@ -28,6 +28,7 @@ var R = {
 	},
 	
 	Event: {
+		fileLoaded: 'FileLoaded',
 		sliderHit: 'SliderHit',
 		chooseDirection: 'ChooseDirection',
 		syscallFocused: 'SyscallFocused',
@@ -89,7 +90,8 @@ var testLevel = {
 	},
 	
 	syscalls: {
-		Vanish: [ [100,900] ]
+		Vanish: [ [100,900] ],
+		Exec: [ [150,600] ]
 	},
 	
 	strokeStyle: '#FFFFFF',
