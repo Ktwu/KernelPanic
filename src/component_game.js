@@ -49,9 +49,9 @@ Crafty.c('GamePlayer', {
 		return this.setGameProperty('gameplayer_hud', hud);
 	},
 	
-	gameplayer_putOnLine: function(x1, y1, x2, y2) {	
-		this.slide_setPoint1(x1, y1, ['LEFT_ARROW'])
-		.slide_setPoint2(x2, y2, ['RIGHT_ARROW']);
+	gameplayer_putOnLine: function(x1, y1, key1, x2, y2, key2) {	
+		this.slide_setPoint1(x1, y1, [key1])
+		.slide_setPoint2(x2, y2, [key2]);
 		
 		this.slideTarget.x = x2;
 		this.slideTarget.y = y2;
@@ -114,10 +114,41 @@ Crafty.c('GameHud', {
 		this.gameHud_keyMap = {};
 	},
 	
+	gameHud_oppositeKey: function(key) {
+		var list = this._gameHud_keyList;
+		for (var i = 0; i < list.length; ++i) {
+			if (list[i] == key) {
+				return list[(i + list.length/2) % list.length];
+			}
+		}
+		return null;
+	},
+	
+	gameHud_lineToKeyPair: function(x1, y1, x2, y2) {
+		D.vector.x = x1;
+		D.vector.y = y1;
+		D.vector2.x = x2;
+		D.vector2.y = y2;
+		
+		D.vector = D.vector2.subtract(D.vector).normalize();
+			
+		var angle = R.Vector.right.angleBetween(D.vector);
+		if (angle < 0)
+			angle += 2*Math.PI;
+
+		// Find the closest key-angle to our angle, then verify that there's no other
+		var keyData = Tools.toClosest(angle, this._gameHud_angleList);
+		var key = this._gameHud_keyList[keyData.i];
+		
+		// If the player was in the middle of the line, the first key
+		// would go towards the first point.  The second key should 
+		// represent movement towards the second point.
+		return [this.gameHud_oppositeKey(key), key];
+	},
+	
 	gameHud_load: function(data) {
 		var edgeset = data.edgeSet;
 		this.gameHud_center = data.center;
-		
 		this.gameHud_startVertex = edgeset.startVertex;
 		var ends = edgeset.endVertices;
 		var angle;
@@ -168,7 +199,7 @@ Crafty.c('GameHud', {
 	_gameHud_drawSyscall: function(data) {
 		var ctx = data.ctx;
 		
-		if (this.gameHud_center === null)
+		if (this.gameHud_center === null || this.gameHud_center === undefined)
 			return;
 			
 		ctx.save();
@@ -265,7 +296,12 @@ Crafty.c('GameGraph', {
 		this.onRegister[R.States.chooseDirection] = function(state, data) {
 			var hud = this.gamegraph_gameplayer.gameplayer_hud;
 			hud.visible = true;
+			
 			if (data) {
+				D.vector.x = data.hitX;
+				D.vector.y = data.hitY;	
+				data.edgeSet = this.graph_edgeSet(D.vector);
+
 				hud.gameHud_clear();	
 				hud.gameHud_load(data);
 			}
@@ -288,8 +324,6 @@ Crafty.c('GameGraph', {
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();		
 		};
-		
-		this.lastState = R.States.move;
 	},
 	
 	gamegraph_setTravelGraph: function(graph) {
@@ -365,7 +399,11 @@ Crafty.c('GameGraph', {
 				}
 			}
 		}
-		
+
+		// Set up the initial start
+		this.startData = { hitX: start.x1, hitY: start.y1 };
+		this.startState = R.States.chooseDirection;
+				
 		return this;
 	},
 	
@@ -392,12 +430,6 @@ Crafty.c('GameGraph', {
 	// When the play hits a node, we determine whether they've hit an in-game object
 	// or if they need to choose a new path to travel on.
 	_gamegraph_sliderHit: function(data) {	
-		// The vertices we can go to.
-		D.vector.x = data.x;
-		D.vector.y = data.y;	
-		var edgeSet = this.graph_edgeSet(D.vector);
-		var vertices = edgeSet.endVertices;
-		
 		// Only add the edge to our traveled list if the player actually traveled the edge
 		var player = this.gamegraph_gameplayer;
 		if (player.slideTarget.x == data.x && player.slideTarget.y == data.y) {
@@ -409,16 +441,12 @@ Crafty.c('GameGraph', {
 		
 		// Are any of our syscalls active?  If so, we want to allow the player to activate the syscall
 		var data = {
-			edgeSet: edgeSet,
 			center: (this._activeSyscall) ? this._activeSyscall.syscallName : null,
+			hitX: data.x,
+			hitY: data.y
 		};
-		
-		if (!vertices) {
-			player.gameplayer_putOnLine(data.x, data.y, data.otherX, data.otherY);
-			console.log("WHY ARE THERE NO VERTICES");
-		} else {
-			this.transitionTo(R.States.chooseDirection, data);
-		} 
+
+		this.transitionTo(R.States.chooseDirection, data); 
 	},
 	
 	_gamegraph_waitForHudChoice: function(e) {
@@ -427,7 +455,11 @@ Crafty.c('GameGraph', {
 		if (player.gameplayer_hud.gameHud_keyMap[key]) {
 			var end = player.gameplayer_hud.gameHud_keyMap[key].vertex;
 			var start = player.gameplayer_hud.gameHud_startVertex;
-			player.gameplayer_putOnLine(start.x, start.y, end.x, end.y);
+			
+			// Put on line, set keys for movement
+			player.gameplayer_putOnLine(start.x, start.y, player.gameplayer_hud.gameHud_oppositeKey(key),
+				end.x, end.y, key);
+			
 			this.transitionTo(R.States.move);
 		} else if (this._activeSyscall && key == player.gameplayer_hud.gameHud_syscallKey) {
 			this._activeSyscall.trigger(R.Event.syscallActivate, this);
@@ -543,7 +575,7 @@ Crafty.c('GameLevel', {
 			this.gamelevel_createPlayer(this.graphs[i]);
 		}
 
-		this.enableMachine(0, R.States.graphChange);
+		this.enableMachine(R.States.graphChange, 0);
 		return this;
 	},
 	
@@ -558,9 +590,11 @@ Crafty.c('GameLevel', {
 		graph.gamegraph_setPlayer(player);
 		graph.gamegraph_gameplayer.gameplayer_setHud(hud);
 			
+		// Uh...should probably set the game to wait for user input by default
+		var keys = player.gameplayer_hud.gameHud_lineToKeyPair(start.x1, start.y1, start.x2, start.y2);
 		player.gameplayer_putOnLine(
-			start.x1, start.y1,
-			start.x2, start.y2
+			start.x1, start.y1, keys[0],
+			start.x2, start.y2, keys[1]
 		);
 		
 		return player;	

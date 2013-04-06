@@ -151,6 +151,10 @@ Crafty.c('StateMachine', {
 	
 	isMachineEnabled: false,
 	
+	isMachineStarted: false,
+	startState: null,
+	startData: null,
+	
 	init: function() {
 		this.onRegister = {};
 		this.onUnregister = {};
@@ -172,11 +176,22 @@ Crafty.c('StateMachine', {
 		}
 	},
 	
-	enableMachine: function(data, firstState) {
+	enableMachine: function(state, data) {
 		if (this.isMachineEnabled)
 			return;
 		this.isMachineEnabled = true;
-		this.transitionTo(firstState !== undefined ? firstState : this.lastState, data);
+		
+		if (state !== undefined)
+			this.startState = state;
+		if (data !== undefined)
+			this.startData = data;
+		
+		if (this.isMachineStarted)
+			this.transitionTo(this.lastState, data);
+		else {
+			this.isMachineStarted = true;
+			this.transitionTo(this.startState, this.startData);
+		}
 	},
 	
 	disableMachine: function(data) {

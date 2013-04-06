@@ -34,7 +34,7 @@ Crafty.c('Syscall', {
 			this._parent.trigger(R.Event.syscallFocused, {isFocused: false, syscall: this});
 		};
 
-		this.lastState = R.States.syscallNormal;
+		this.startState = R.States.syscallNormal;
 	},
 	
 	_syscall_checkForCollision: function(player) {
@@ -114,7 +114,9 @@ Crafty.c('Exec', {
 			// Kill the old player.
 			graph.detach(oldPlayer);
 			oldPlayer.destroy();
-			graph.transitionTo(R.States.move);
+			
+			var start = graph.graph_labelSet('start');
+			graph.transitionTo(R.States.chooseDirection, { hitX: start.x1, hitY: start.y1 });
 		};
 		
 		// Time to set our level to action!

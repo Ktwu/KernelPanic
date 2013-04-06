@@ -78,7 +78,8 @@ var D = {
 	scene: null,
 	error: null,
 	css:   null,
-	vector: new Crafty.math.Vector2D()
+	vector: new Crafty.math.Vector2D(),
+	vector2: new Crafty.math.Vector2D()
 };
 
 // An adjacency list, where strokes[i] are edge lists, stroke[i][j] are vertices
