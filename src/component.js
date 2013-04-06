@@ -39,8 +39,16 @@ Crafty.c('Vehicle', {
 	_targetPosition: null,
 	
 	init: function() {
+		this.bind("Remove", this._vehicle_onRemove);
 		this._targetPosition = new Crafty.math.Vector2D();
 		this.velocity = new Crafty.math.Vector2D(0,0);
+	},
+	
+	_vehicle_onRemove: function() {
+		delete seeker;
+		delete target;
+		delete velocity;
+		delete _targetPosition;
 	},
 	
 	setSeek: function(seeker, target) {
@@ -96,13 +104,20 @@ Crafty.c('Vehicle', {
 });
 
 Crafty.c('CustomDraw', {
+	_customDraw_require: "2D, Canvas",
+	
 	drawFunctions: null,
 	isDrawingEnabled: false,
 	ready: true,
 	
 	init: function() {
-		this.requires('2D, Canvas');
+		this.requires(this._customDraw_require).bind("Remove", this._customDraw_onRemove);
 		this.drawFunctions = [];
+	},
+	
+	_customDraw_onRemove: function() {
+		this.drawFunctions.length = 0;
+		delete this.drawFunctions;
 	},
 	
 	disableDrawing: function() {
@@ -156,8 +171,15 @@ Crafty.c('StateMachine', {
 	startData: null,
 	
 	init: function() {
+		this.bind("Remove", this._stateMachine_onRemove);
 		this.onRegister = {};
 		this.onUnregister = {};
+	},
+	
+	_stateMachine_onRemove: function() {
+		delete this.onRegister;
+		delete this.onUnregister;
+		delete this.startData;
 	},
 	
 	transitionTo: function(state, data) {
@@ -243,12 +265,19 @@ Crafty.c("MultiInput", {
 	_multi_enabled: false,
 	
 	init: function() {
+		this.bind("EnterFrame", this._multi_enterframe).bind("Remove", this._multi_onRemove);
 		this._movement = {
 			x: 0,
 			y: 0
 		};
 		this.multi_clear();
-		this.bind("EnterFrame", this._multi_enterframe);
+	},
+	
+	_multi_onRemove: function() {
+		delete this._activeMap;
+		delete this._cooloffMap;
+		delete this._keys;
+		delete this._movement;
 	},
 	
 	multi_undoMove: function () {
@@ -409,16 +438,20 @@ Crafty.c("MultiInput", {
 });
 
 Crafty.c('Slider', {
+	_slider_require: "2D, MultiInput",
+	
 	x1: 0,
 	y1: 0,
 	keys1: null,
 	x2: 0,
 	y2: 0,
+	keys2: null,
+	
 	_slider_offsetX: 0,
 	_slider_offsetY: 0,
 	_slider_x: 0,
 	_slider_y: 0,
-	keys2: null,
+
 	speedOnPress: null,
 	speedOnRelease: null,
 	
@@ -429,12 +462,21 @@ Crafty.c('Slider', {
 	_slider_offsetY: 0,
 	
 	init: function() {
-		this.requires('2D, MultiInput');
+		this.bind("Remove", this._slider_onRemove).requires(this._slider_require);
 		this.multi_enableControl();
 		
 		this.keys1 = [];
 		this.keys2 = [];
 		this.bind("Moved", this._slider_moved);
+	},
+	
+	_slider_onRemove: function() {
+		this.keys1.length = 0;
+		this.keys2.length = 0;
+	 	delete this.keys1;
+	 	delete this.keys2;
+	 	delete this.speedOnPress;
+	 	delete this.speedOnRelease;
 	},
 	
 	slide_anchor: function(percent) {
@@ -526,6 +568,8 @@ Crafty.c('Slider', {
 
 
 Crafty.c('GraphDraw', {
+	_graphdraw_require: "CustomDraw, 2D, Center",
+	
 	strokeStyle: "#000000",
 	lineWidth: 1,
 	alpha: 1,
@@ -537,7 +581,7 @@ Crafty.c('GraphDraw', {
 	_graphdraw_maxY: -Number.MAX_VALUE,
 	
 	init: function() {
-		this.requires('CustomDraw, 2D, Center')
+		this.bind("Remove", this._graphdraw_onRemove).requires(this._graphdraw_require)
 		.attr({
 			x: 0,
 			y: 0,
@@ -547,6 +591,11 @@ Crafty.c('GraphDraw', {
 		.bind('Change',this._graphdraw_change);
 		this._graphdraw_adjacencyList = [];		
 		this.drawFunctions.push(this._graphdraw_draw);
+	},
+	
+	_graphdraw_onRemove: function() {
+		this._graphdraw_adjacencyList.length = 0;
+		delete this._graphdraw_adjacencyList;
 	},
 	
 	graphdraw_tryAddEdge: function(v1, v2) {
@@ -661,8 +710,14 @@ Crafty.c('Graph', {
 	_graph_labels: null,
 	
 	init: function() {
+		this.bind("Remove", this._graph_onRemove);
 		this._graph_adjacencyList = [];
 		this._graph_labels = {};
+	},
+	
+	_graph_onRemove: function() {
+		delete this._graph_adjacencyList;
+		delete this._graph_labels;
 	},
 
 	graph_makeUndirected: function() {
@@ -744,8 +799,10 @@ Crafty.c('Graph', {
 
 
 Crafty.c('Ellipse', {
+	_ellipse_require: "CustomDraw, Center",
+	
   init: function() {
-    this.requires('CustomDraw, Center')
+    this.requires(this._ellipse_require)
     .attr({
       	x: 50,
       	y: 50,

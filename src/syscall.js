@@ -38,6 +38,7 @@ Crafty.c('Syscall', {
 	},
 	
 	_syscall_checkForCollision: function(player) {
+		console.log("check");
 		if (Math.abs(player.x - this.x) < player.w/2+this.w/2
 			&& Math.abs(player.y - this.y) < player.h/2+this.h/2) {
 				// Did we collide?

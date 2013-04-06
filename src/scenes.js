@@ -18,7 +18,6 @@ Crafty.scene(R.Scene.intro, function() {
 });
 
 Crafty.scene(R.Scene.prototype_intro, function() {
-	console.log(Crafty.assets);
 	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.prototype_intro];
 	KernelPanic.UI.style['overflow-y'] = 'auto';
 	
@@ -50,7 +49,10 @@ Crafty.scene(R.Scene.loading, function() {
 	} else {
 		// Code to load UI files.
 		Crafty.load([R.UI.prototype_intro, R.UI.intro],
-		function() { Crafty.scene(R.Scene.prototype_intro); });
+			function() { Crafty.scene(R.Scene.prototype_intro); },
+			null,
+			function() { D.error = R.Error.loadFail; Crafty.scene(R.Scene.error); }
+		);
 	}
 }); 
 

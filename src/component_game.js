@@ -1,6 +1,8 @@
-Crafty.c('GamePiece', {
+Crafty.c("GamePiece", {
+	_gamepiece_require: "Cascader",
+	
 	init: function() {
-		this.requires('Cascader');
+		this.requires(this._gamepiece_require);
 	},
 	
 	setGameProperty: function(propertyName, value) {
@@ -16,24 +18,31 @@ Crafty.c('GamePiece', {
 	}
 });
 
-Crafty.c('GamePlayer', {
+Crafty.c("GamePlayer", {
 	gameplayer_graph: null,
 	gameplayer_hud: null,
 	gameplayer_slideTarget: null,
+	_gameplayer_require: "GamePiece, Slider, Ellipse",
 	
 	init: function() {
-		this.requires('GamePiece, Slider, Ellipse')
+		this.bind("Remove", this._gameplayer_onRemove).requires(this._gameplayer_require)
 		.bind(R.Event.sliderHit, this._gameplayer_sliderHit)
-		.bind("Moved", this._gameplayer_moved)
+		.bind(R.Event.Moved, this._gameplayer_moved)
 		.attr({
 			lineWidth: 5,
-			onClose: 'fill',
+			onClose: "fill",
 			fillStyle: "#FFFFFF",
 			w: 30,
 			h: 30
 		});
 			
 		this.slideTarget = new Crafty.math.Vector2D();
+	},
+	
+	_gameplayer_onRemove: function() {
+		delete this.gameplayer_graph;
+		delete this.gameplayer_hud;
+		delete this.gameplayer_slideTarget;
 	},
 	
 	gameplayer_setGraph: function(graph) {
@@ -46,7 +55,7 @@ Crafty.c('GamePlayer', {
 			hud = Crafty.e("GameHud");
 			hud.centerOn(this.centerX(), this.centerY());
 		}	
-		return this.setGameProperty('gameplayer_hud', hud);
+		return this.setGameProperty("gameplayer_hud", hud);
 	},
 	
 	gameplayer_putOnLine: function(x1, y1, key1, x2, y2, key2) {	
@@ -75,7 +84,6 @@ Crafty.c('GamePlayer', {
 	},
 	
 	_gameplayer_sliderHit: function(data) {
-		// Ferry the data from us to our game logic.
 		this.gameplayer_graph.trigger(R.Event.sliderHit, data);
 	},
 	
@@ -84,38 +92,45 @@ Crafty.c('GamePlayer', {
 	}
 });
 
-Crafty.c('GameHud', {
-	gameHud_startVertex: null,
-	gameHud_keyMap: null,
-	gameHud_displacement: 20,
-	gameHud_center: "",
-	gameHud_syscallKey: "SPACE",
-	_gameHud_keyList: ['D', 'C', 'X', 'Z', 'A', 'Q', 'W', 'E'],
-	_gameHud_angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
+Crafty.c("GameHud", {
+	gamehud_startVertex: null,
+	gamehud_keyMap: null,
+	gamehud_displacement: 20,
+	gamehud_center: "",
+	gamehud_syscallKey: "SPACE",
+	_gamehud_keyList: ["D", "C", "X", "Z", "A", "Q", "W", "E"],
+	_gamehud_angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
+	_gamehud_require: "GamePiece, Ellipse",
 	
 	init: function() {
-		this.requires('GamePiece, Ellipse')
+		this.bind("Remove", this._gamehud_onRemove).requires(this._gamehud_require)
 		.attr({
 			lineWidth: 20,
 			strokeStyle: "#000000",
-			onClose: 'stroke',
+			onClose: "stroke",
 			w: 100,
 			h: 100,
 			visible: false,
-			gameHud_displacement: 40
+			gamehud_displacement: 40
 		});
 		
-		this.drawFunctions.push(this._gameHud_draw);
-		this.drawFunctions.unshift(this._gameHud_drawSyscall);
-		this.gameHud_keyMap = {};
+		this.drawFunctions.push(this._gamehud_draw);
+		this.drawFunctions.unshift(this._gamehud_drawSyscall);
+		this.gamehud_keyMap = {};
 	},
 	
-	gameHud_clear: function() {
-		this.gameHud_keyMap = {};
+	_gamehud_onRemove: function() {
+		delete this.gamehud_startVertex;
+		delete this.gamehud_keyMap;
+		delete this.gamehud_center;	
 	},
 	
-	gameHud_oppositeKey: function(key) {
-		var list = this._gameHud_keyList;
+	gamehud_clear: function() {
+		this.gamehud_keyMap = {};
+	},
+	
+	gamehud_oppositeKey: function(key) {
+		var list = this._gamehud_keyList;
 		for (var i = 0; i < list.length; ++i) {
 			if (list[i] == key) {
 				return list[(i + list.length/2) % list.length];
@@ -124,7 +139,7 @@ Crafty.c('GameHud', {
 		return null;
 	},
 	
-	gameHud_lineToKeyPair: function(x1, y1, x2, y2) {
+	gamehud_lineToKeyPair: function(x1, y1, x2, y2) {
 		D.vector.x = x1;
 		D.vector.y = y1;
 		D.vector2.x = x2;
@@ -136,20 +151,20 @@ Crafty.c('GameHud', {
 		if (angle < 0)
 			angle += 2*Math.PI;
 
-		// Find the closest key-angle to our angle, then verify that there's no other
-		var keyData = Tools.toClosest(angle, this._gameHud_angleList);
-		var key = this._gameHud_keyList[keyData.i];
+		// Find the closest key-angle to our angle, then verify that there"s no other
+		var keyData = Tools.toClosest(angle, this._gamehud_angleList);
+		var key = this._gamehud_keyList[keyData.i];
 		
 		// If the player was in the middle of the line, the first key
 		// would go towards the first point.  The second key should 
 		// represent movement towards the second point.
-		return [this.gameHud_oppositeKey(key), key];
+		return [this.gamehud_oppositeKey(key), key];
 	},
 	
-	gameHud_load: function(data) {
+	gamehud_load: function(data) {
 		var edgeset = data.edgeSet;
-		this.gameHud_center = data.center;
-		this.gameHud_startVertex = edgeset.startVertex;
+		this.gamehud_center = data.center;
+		this.gamehud_startVertex = edgeset.startVertex;
 		var ends = edgeset.endVertices;
 		var angle;
 		var angles = [];
@@ -172,16 +187,16 @@ Crafty.c('GameHud', {
 		var keyAngleBlacklist = [];
 		var i = 0;
 		while (angleBlacklist.length < angles.length
-			&& keyAngleBlacklist.length < this._gameHud_keyList.length) {
+			&& keyAngleBlacklist.length < this._gamehud_keyList.length) {
 				
-			// Find the closest key-angle to our angle, then verify that there's no other
-			// key-angle that's closer
-			var keyData = Tools.toClosest(angles[i], this._gameHud_angleList, keyAngleBlacklist);
+			// Find the closest key-angle to our angle, then verify that there"s no other
+			// key-angle that"s closer
+			var keyData = Tools.toClosest(angles[i], this._gamehud_angleList, keyAngleBlacklist);
 			var angleData = Tools.toClosest(keyData.value, angles, angleBlacklist);
 			
 			if (angleData.value == angles[i]) {
 				// Excellent, a matching!
-				this.gameHud_keyMap[this._gameHud_keyList[keyData.i]] = {
+				this.gamehud_keyMap[this._gamehud_keyList[keyData.i]] = {
 					direction: new Crafty.math.Vector2D(Math.cos(angles[i]), Math.sin(angles[i])),
 					vertex: ends[i]
 				};
@@ -189,17 +204,17 @@ Crafty.c('GameHud', {
 				angleBlacklist.push(angleData.value);
 				keyAngleBlacklist.push(keyData.value);
 			} else {
-				// If some other angle is closer to our key, then let's find out
+				// If some other angle is closer to our key, then let"s find out
 				// who this new key should match to first.
 				i = angleData.i;
 			}
 		}
 	},
 	
-	_gameHud_drawSyscall: function(data) {
+	_gamehud_drawSyscall: function(data) {
 		var ctx = data.ctx;
 		
-		if (this.gameHud_center === null || this.gameHud_center === undefined)
+		if (this.gamehud_center === null || this.gamehud_center === undefined)
 			return;
 			
 		ctx.save();
@@ -217,12 +232,12 @@ Crafty.c('GameHud', {
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillText(this.gameHud_center + "", this.centerX(), this.centerY());	
+		ctx.fillText(this.gamehud_center + "", this.centerX(), this.centerY());	
 		
 		ctx.restore();		
 	},
 	
-	_gameHud_draw: function(data) {
+	_gamehud_draw: function(data) {
 		var ctx = data.ctx;
 		
 		ctx.save();
@@ -232,17 +247,19 @@ Crafty.c('GameHud', {
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		for (var key in this.gameHud_keyMap) {
+		for (var key in this.gamehud_keyMap) {
 			ctx.fillText(key, 
-				(this.gameHud_displacement * this.gameHud_keyMap[key].direction.x + this.centerX()),
-				(this.gameHud_displacement * this.gameHud_keyMap[key].direction.y + this.centerY()));
+				(this.gamehud_displacement * this.gamehud_keyMap[key].direction.x + this.centerX()),
+				(this.gamehud_displacement * this.gamehud_keyMap[key].direction.y + this.centerY()));
 		}
 		
 		ctx.restore();
 	}
 });
 
-Crafty.c('GameGraph', {
+Crafty.c("GameGraph", {
+	_gamegraph_require: "GamePiece, Graph, GraphDraw, StateMachine",
+		
 	gamegraph_travelgraph: null,
 	gamegraph_gameplayer: null,
 	gamegraph_syscalls: null,
@@ -250,16 +267,27 @@ Crafty.c('GameGraph', {
 	_activeSyscall: null,
 	
 	init: function() {
-		this.requires('GamePiece, Graph, GraphDraw, StateMachine')
-		.bind('Change', this._gamegraph_change)
+		this.bind(R.Event.Remove, this._gamegraph_onRemove).requires(this._gamegraph_require)
+		.bind(R.Event.Change, this._gamegraph_change)
 		.attr({
 			lineWidth: 7, 
 			strokeStyle: "#FFFFFF"
-		});
-		
+		});		
 		this.gamegraph_syscalls = {};
 		
-		// Add a function that traces the player's path.
+		this._gamegraph_register();
+	},
+	
+	_gamegraph_onRemove: function() {
+		this.disableMachine();
+		delete this.gamegraph_travelgraph;
+		delete this.gamegraph_gameplayer;
+		delete this.gamegraph_syscalls;
+		delete this._activeSyscall;
+	},
+	
+	_gamegraph_register: function() {		
+		// Add a function that traces the player"s path.
 		this.drawFunctions.push(function(data) {
 			var ctx = data.ctx;
 		
@@ -279,7 +307,7 @@ Crafty.c('GameGraph', {
 		    ctx.restore();
 		});
 		
-		// Set up our graph's input states
+		// Set up our graph"s input states
 		this.onRegister[R.States.move] = function(state, data) {
 			var player = this.gamegraph_gameplayer;
 			player.multi_enableControl();
@@ -302,16 +330,16 @@ Crafty.c('GameGraph', {
 				D.vector.y = data.hitY;	
 				data.edgeSet = this.graph_edgeSet(D.vector);
 
-				hud.gameHud_clear();	
-				hud.gameHud_load(data);
+				hud.gamehud_clear();	
+				hud.gamehud_load(data);
 			}
-			this.bind('KeyDown', this._gamegraph_waitForHudChoice);
+			this.bind(R.Event.KeyDown, this._gamegraph_waitForHudChoice);
 		};
 		this.onUnregister[R.States.chooseDirection] = function(state, data) {
 			var hud = this.gamegraph_gameplayer.gameplayer_hud;
 			if (state !== this.DISABLED_STATE)
 				hud.visible = false;
-			this.unbind('KeyDown', this._gamegraph_waitForHudChoice);
+			this.unbind(R.Event.KeyDown, this._gamegraph_waitForHudChoice);
 		};
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
@@ -328,22 +356,22 @@ Crafty.c('GameGraph', {
 	
 	gamegraph_setTravelGraph: function(graph) {
 		if (!graph) {
-			graph = Crafty.e('GraphDraw')
+			graph = Crafty.e("GraphDraw")
 			.attr({
 				strokeStyle: "#0000FF", 
 				lineWidth: 5
 			});
 		}
 		
-		return this.setGameProperty('gamegraph_travelgraph', graph);
+		return this.setGameProperty("gamegraph_travelgraph", graph);
 	},
 	
 	gamegraph_setPlayer: function(player) {
 		if (!player) {
-			player = Crafty.e('gameplayer');		
+			player = Crafty.e("gameplayer");		
 		}
 		
-		return this.setGameProperty('gamegraph_gameplayer', player);
+		return this.setGameProperty("gamegraph_gameplayer", player);
 	},
 	
 	gamegraph_load: function(graph) {
@@ -380,7 +408,7 @@ Crafty.c('GameGraph', {
 			y1: graph.start.y1 * scaleY,
 			y2: graph.start.y2 * scaleY
 		};
-		this.graph_addLabel('start', start);
+		this.graph_addLabel("start", start);
 
 		var syscalls = graph.syscalls;
 		var absPos = this.gamegraph_vertexBase();
@@ -403,7 +431,7 @@ Crafty.c('GameGraph', {
 		// Set up the initial start
 		this.startData = { hitX: start.x1, hitY: start.y1 };
 		this.startState = R.States.chooseDirection;
-				
+		
 		return this;
 	},
 	
@@ -427,7 +455,7 @@ Crafty.c('GameGraph', {
 		}
 	},
 	
-	// When the play hits a node, we determine whether they've hit an in-game object
+	// When the play hits a node, we determine whether they"ve hit an in-game object
 	// or if they need to choose a new path to travel on.
 	_gamegraph_sliderHit: function(data) {	
 		// Only add the edge to our traveled list if the player actually traveled the edge
@@ -452,28 +480,30 @@ Crafty.c('GameGraph', {
 	_gamegraph_waitForHudChoice: function(e) {
 		var player = this.gamegraph_gameplayer;
 		var key = R.CodeToKey[e.key];
-		if (player.gameplayer_hud.gameHud_keyMap[key]) {
-			var end = player.gameplayer_hud.gameHud_keyMap[key].vertex;
-			var start = player.gameplayer_hud.gameHud_startVertex;
+		if (player.gameplayer_hud.gamehud_keyMap[key]) {
+			var end = player.gameplayer_hud.gamehud_keyMap[key].vertex;
+			var start = player.gameplayer_hud.gamehud_startVertex;
 			
 			// Put on line, set keys for movement
-			player.gameplayer_putOnLine(start.x, start.y, player.gameplayer_hud.gameHud_oppositeKey(key),
+			player.gameplayer_putOnLine(start.x, start.y, player.gameplayer_hud.gamehud_oppositeKey(key),
 				end.x, end.y, key);
 			
 			this.transitionTo(R.States.move);
-		} else if (this._activeSyscall && key == player.gameplayer_hud.gameHud_syscallKey) {
+		} else if (this._activeSyscall && key == player.gameplayer_hud.gamehud_syscallKey) {
 			this._activeSyscall.trigger(R.Event.syscallActivate, this);
 		}
 	},
 	
 	_gamegraph_checkForSyscall: function(e) {
-		// Let each syscall check whether they're colliding with the player or not
+		// Let each syscall check whether they"re colliding with the player or not
 		for (var i in this.gamegraph_syscalls) {
 			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_gameplayer);
 		}
 	},
 	
 	_gamegraph_syscallFocused: function(e) {
+		console.log("syscall isn't focused?");
+		
 		// We may change our focus to a new syscall, otherwise if we lose focus
 		// we set our active syscall to null.
 		if (e.isFocused) {
@@ -486,32 +516,47 @@ Crafty.c('GameGraph', {
 	}
 });
 
-Crafty.c('GameLevel', {
-	graphs: null,
-	fromGraphI: -1,
-	toGraphI: -1,
-	currentI: -1,
-	seekVehicle: null,
-	
+Crafty.c("GameLevel", {
+	_gamelevel_require: "StateMachine",
+		
 	init: function() {
 		// bind for game-specific functions
-		this.requires('StateMachine');
+		this.requires(this._gamelevel_require);
 		this.graphs = [];
-		this.seekVehicle = Crafty.e('Vehicle');
+		this.seekVehicle = Crafty.e("Vehicle");
+		this.fromGraphI = -1;
+		this.toGraphI = -1;
+		this.currentI = -1;
 		
+		this._gamelevel_register();
+	},
+	
+	_gamelevel_destroy: function() {
+		this.disableMachine();
+		this.graphs.length = 0;
+		delete this.graphs;
+		delete this.seekVehicle;
+		
+		Crafty.viewport.x = 0;
+		Crafty.viewport.y = 0;
+		
+		this.destroy();
+	},
+	
+	_gamelevel_register: function() {	
 		// Callbacks to allow the graphs to scroll on graph change.
 		// When we switch between graphs, we disable input to both and render both.
 		this.onRegister[R.States.levelNormal] = function(oldState, data) {
-			this.bind('EnterFrame', this._gamelevel_enterFrame)
-			.bind('KeyDown', this._gamelevel_keydown);
+			this.bind(R.Event.EnterFrame, this._gamelevel_enterFrame)
+			.bind(R.Event.KeyDown, this._gamelevel_keydown);
 		};
 		this.onUnregister[R.States.levelNormal] = function() {
-			this.unbind('EnterFrame', this._gamelevel_enterFrame)
-			.unbind('KeyDown', this._gamelevel_keydown);
+			this.unbind(R.Event.EnterFrame, this._gamelevel_enterFrame)
+			.unbind(R.Event.KeyDown, this._gamelevel_keydown);
 		};
 		
 		this.onRegister[R.States.graphChange] = function(oldState, data) {
-			// Our data is the ID of the graph we're switching to.
+			// Our data is the ID of the graph we"re switching to.
 			this.toGraphI = data;
 			this.fromGraphI = this.currentI;
 			this.currentI = this.toGraphI;
@@ -533,10 +578,10 @@ Crafty.c('GameLevel', {
 				});				
 			}
 				
-			if (this.fromGraphI >= 0) {
+			if (this.fromGraphI >= 0) {					
 				fromGraph.disableMachine();
 				this.seekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
-				this.bind('EnterFrame', this._gamelevel_graphChange);
+				this.bind(R.Event.EnterFrame, this._gamelevel_graphChange);
 			} else {
 				toGraph.enableMachine();
 				this.transitionTo(R.States.levelNormal);
@@ -548,7 +593,7 @@ Crafty.c('GameLevel', {
 			if (this.fromGraphI >= 0)
 				this.graphs[this.fromGraphI].disableDrawing();				
 			this.graphs[this.toGraphI].enableMachine();
-			this.unbind('EnterFrame', this._gamelevel_graphChange);
+			this.unbind(R.Event.EnterFrame, this._gamelevel_graphChange);
 			
 			Crafty.trigger(R.Event.levelGraphSwitched, {
 				oldGraph: (this.fromGraphI >= 0) ? this.graphs[this.fromGraphI] : null,
@@ -561,7 +606,7 @@ Crafty.c('GameLevel', {
 		// Load all of our graphs at once! 
 		for (var i = 0; i < graphs.length; ++i) {
 			// For each graph, a travel graph...
-			this.graphs[i] = Crafty.e('GameGraph')
+			this.graphs[i] = Crafty.e("GameGraph")
 				.gamegraph_setTravelGraph()
 				.gamegraph_load(graphs[i])
 				.graph_makeUndirected()
@@ -580,18 +625,18 @@ Crafty.c('GameLevel', {
 	},
 	
 	gamelevel_createPlayer: function(graph) {
-		// Set the level's player.  We might change this depending on whether
-		// it's better to render the player multiple times.
-		var player = Crafty.e('GamePlayer').multi_disableControl();
-		var start = graph.graph_labelSet('start');
-		var hud = Crafty.e('GameHud').centerOn(player.centerX(), player.centerY());
+		// Set the level"s player.  We might change this depending on whether
+		// it"s better to render the player multiple times.
+		var player = Crafty.e("GamePlayer").multi_disableControl();
+		var start = graph.graph_labelSet("start");
+		var hud = Crafty.e("GameHud").centerOn(player.centerX(), player.centerY());
 			
 		player.gameplayer_setGraph(graph);
 		graph.gamegraph_setPlayer(player);
 		graph.gamegraph_gameplayer.gameplayer_setHud(hud);
 			
 		// Uh...should probably set the game to wait for user input by default
-		var keys = player.gameplayer_hud.gameHud_lineToKeyPair(start.x1, start.y1, start.x2, start.y2);
+		var keys = player.gameplayer_hud.gamehud_lineToKeyPair(start.x1, start.y1, start.x2, start.y2);
 		player.gameplayer_putOnLine(
 			start.x1, start.y1, keys[0],
 			start.x2, start.y2, keys[1]
@@ -607,13 +652,13 @@ Crafty.c('GameLevel', {
 	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
-		if (key == 'S' && this.currentState != R.States.graphChange) {
+		if (key == "S" && this.currentState != R.States.graphChange) {
 			this.gamelevel_toNextGraph();
 		}	
 	},
 	
 	_gamelevel_graphChange: function() {
-		// Scroll the viewport until we're centered on our new graph.
+		// Scroll the viewport until we"re centered on our new graph.
 		if (this.seekVehicle.seek()) {
 			this.transitionTo(R.States.levelNormal);
 		}
@@ -625,8 +670,11 @@ Crafty.c('GameLevel', {
 		});
 		
 		// TODO At some point we need some real death.
-		var player = this.graphs[this.currentI].gamegraph_gameplayer;
-		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height)
-			console.log("death death death");
+		// Real death should...restart the level.
+		var player = this.graphs[this.currentI].gamegraph_gameplayer;			
+		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
+			this._gamelevel_destroy();
+			Crafty.scene(R.Scene.game);
+		}
 	}
 });

@@ -9,11 +9,11 @@ var KernelPanic = {
 };
 
 // A store for unchanging variables for reference throughout the game
-// Similar to Android's reference files
+// Similar to Android"s reference files
 var R = {	
 	UI: {
-		intro:				'assets/ui/intro.html',  
-		prototype_intro: 	'assets/ui/prototype_intro.html'
+		intro:				"assets/ui/intro.html",  
+		prototype_intro: 	"assets/ui/prototype_intro.html"
 	},
 	
 	States: {
@@ -31,35 +31,42 @@ var R = {
 	},
 	
 	Scene: {
-		loading:  				'Loading',
-		error:			    	'Error',
-		game:     				'Game',
-		prototype_intro:    	'Prototype_Intro',
-		controls: 				'Controls'
+		loading:  				"Loading",
+		error:			    	"Error",
+		game:     				"Game",
+		prototype_intro:    	"Prototype_Intro",
+		controls: 				"Controls"
 	},
 	
 	Event: {
-		sliderHit: 				'SliderHit',
-		chooseDirection: 		'ChooseDirection',
-		syscallFocused: 		'SyscallFocused',
-		syscallActivate: 		'SyscallActivate',
-		levelGraphSwitched: 	'LevelGraphSwitched'
+		sliderHit: 				"SliderHit",
+		chooseDirection: 		"ChooseDirection",
+		syscallFocused: 		"SyscallFocused",
+		syscallActivate: 		"SyscallActivate",
+		levelGraphSwitched: 	"LevelGraphSwitched",
+		
+		Change: "Change",
+		Remove: "Remove",
+		KeyDown: "KeyDown",
+		EnterFrame: "EnterFrame",
+		Moved: "Moved"
 	},
 	
 	Error: {
-		noCanvas: 'Canvas tag not supported :(',
-		noAudio:  'Audio not supported :('
+		noCanvas: "Canvas tag not supported :(",
+		noAudio:  "Audio not supported :(",
+		loadFail: "Unable to load all assets :("
 	},
 	
 	CSS: {
 		$text: {
-		  'font-size': '24px',
-		  'font-family': 'Arial',
-		  'color': 'white',
-		  'text-align': 'center'
+		  "font-size": "24px",
+		  "font-family": "Arial",
+		  "color": "white",
+		  "text-align": "center"
 		},
 		
-		$strokeStyle: '#FFFFFF'
+		$strokeStyle: "#FFFFFF"
 	},
 	
 	Vector: {
@@ -105,7 +112,7 @@ var testLevel = {
 		Exec: [ [150,600] ]
 	},
 	
-	strokeStyle: '#FFFFFF',
+	strokeStyle: "#FFFFFF",
 	lineWidth: 3
 };
 
@@ -137,7 +144,7 @@ var level1 = {
 		Exec: [ [150,600], [75, 1600], [150,1500] ]
 	},
 	
-	strokeStyle: '#FFFFFF',
+	strokeStyle: "#FFFFFF",
 	lineWidth: 3
 };
 
@@ -168,7 +175,7 @@ var level2 = {
 		Exec: [ [250, 200], [50, 600], [150,1500] ]
 	},
 	
-	strokeStyle: '#FFFFFF',
+	strokeStyle: "#FFFFFF",
 	lineWidth: 3
 };
 
