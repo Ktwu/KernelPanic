@@ -1,3 +1,23 @@
+Crafty.c("GamePiece", {
+	_gamepiece_require: "Cascader",
+	
+	init: function() {
+		this.requires(this._gamepiece_require);
+	},
+	
+	setGameProperty: function(propertyName, value) {
+		if (this[propertyName]) {
+			this.detach(this[propertyName]);
+		}
+		
+		var obj = {};
+		obj[propertyName] = value;
+		this.attr(obj);
+		this.attach(value);
+		return this;
+	}
+});
+
 Crafty.c('Cascader', {
 	cascadePropertySet: function(attrObj) {
 		this.attr(attrObj);
@@ -314,7 +334,7 @@ Crafty.c("MultiInput", {
 			};
 			
 			if (Crafty.keydown[keyCode]) {
-				this.trigger("KeyDown", { key: keyCode });
+				this._multi_keydown({ key: keyCode });
 			}
 		}
 		

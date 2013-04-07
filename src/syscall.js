@@ -38,7 +38,6 @@ Crafty.c('Syscall', {
 	},
 	
 	_syscall_checkForCollision: function(player) {
-		console.log("check");
 		if (Math.abs(player.x - this.x) < player.w/2+this.w/2
 			&& Math.abs(player.y - this.y) < player.h/2+this.h/2) {
 				// Did we collide?
@@ -78,7 +77,7 @@ Crafty.c('Exec', {
 	_exec_activate: function(graph) {		
 		// Graph, we don't want any input from you.  Shut up for a bit.
 		graph.transitionTo(R.States.syscallActive);
-		graph._activeSyscall = null;
+		graph.activeSyscall = null;
 		
 		// We're going to create another player up at the top of the graph, back at start.
 		// We'll then get the graph to scroll back up to the top.  Then, we'll
@@ -86,7 +85,12 @@ Crafty.c('Exec', {
 		var exec = this;
 		var oldPlayer = graph.gamegraph_gameplayer;
 		var newPlayer = KernelPanic.currentLevel.gamelevel_createPlayer(graph);
+		
+		// A silly hack to get the new player to start drawing its HUD immediately on creation.
 		newPlayer.enableDrawing();
+		var start = graph.graph_labelSet('start');
+		newPlayer.enableMachine(R.States.chooseDirection, { hitX: start.x1, hitY: start.y1 });
+		newPlayer.disableMachine();
 		
 		// Keep the old player attached to the graph
 		graph.attach(oldPlayer);
@@ -116,8 +120,9 @@ Crafty.c('Exec', {
 			graph.detach(oldPlayer);
 			oldPlayer.destroy();
 			
-			var start = graph.graph_labelSet('start');
-			graph.transitionTo(R.States.chooseDirection, { hitX: start.x1, hitY: start.y1 });
+			// Activate our new player
+			newPlayer.enableMachine();
+			graph.transitionTo(R.States.normal);
 		};
 		
 		// Time to set our level to action!
