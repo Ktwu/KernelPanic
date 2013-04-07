@@ -2,10 +2,11 @@ Crafty.c("GameGraph", {
 	_gamegraph_require: "GamePiece, Graph, GraphDraw, StateMachine",
 		
 	gamegraph_travelgraph: null,
-	gamegraph_gameplayer: null,
+	gamegraph_gameplayers: null,
 	gamegraph_syscalls: null,
 	
 	activeSyscall: null,
+	currentPlayerI: 0,
 	
 	init: function() {
 		this.bind(R.Event.Remove, this._gamegraph_onRemove).requires(this._gamegraph_require)
@@ -15,6 +16,7 @@ Crafty.c("GameGraph", {
 			strokeStyle: "#FFFFFF"
 		});		
 		this.gamegraph_syscalls = {};
+		this.gamegraph_gameplayers = [];
 		
 		this._gamegraph_register();
 	},
@@ -22,7 +24,7 @@ Crafty.c("GameGraph", {
 	_gamegraph_onRemove: function() {
 		this.disableMachine();
 		delete this.gamegraph_travelgraph;
-		delete this.gamegraph_gameplayer;
+		delete this.gamegraph_gameplayers;
 		delete this.gamegraph_syscalls;
 		delete this.activeSyscall;
 	},
@@ -39,7 +41,7 @@ Crafty.c("GameGraph", {
 			ctx.beginPath();
 		
 			var absPos = this.gamegraph_vertexBase();
-			var player = this.gamegraph_gameplayer;
+			var player = this.gamegraph_getCurrentPlayer();
 			ctx.moveTo(player.x1 + absPos._x, player.y1 + absPos._y);
 			ctx.lineTo(player.centerX(), player.centerY());
 		   	
@@ -55,7 +57,7 @@ Crafty.c("GameGraph", {
 			.unbind(R.Event.sliderHit, this._gamegraph_sliderHit);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].disableMachine();
-			this.gamegraph_gameplayer.disableMachine();
+			this.gamegraph_getCurrentPlayer().disableMachine();
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
 			this.bind(R.Event.syscallFocused, this._gamegraph_syscallFocused)
@@ -64,8 +66,21 @@ Crafty.c("GameGraph", {
 			.bind(R.Event.sliderHit, this._gamegraph_sliderHit);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();	
-			this.gamegraph_gameplayer.enableMachine();	
+			this.gamegraph_getCurrentPlayer().enableMachine();	
 		};
+	},
+	
+	gamegraph_setNewPlayer: function(newPlayerI) {	
+		if (newPlayerI < 0 || newPlayerI >= this.gamegraph_gameplayers.length)
+			return false;
+			
+		var currPlayer = this.gamegraph_getCurrentPlayer();
+		currPlayer.gameplayer_lastGraphY = this.y;
+		currPlayer.disableMachine();
+		this.currentPlayerI = newPlayerI;
+		this.gamegraph_getCurrentPlayer().enableMachine();
+		this.transitionTo(R.States.normal);
+		return true;	
 	},
 	
 	gamegraph_setTravelGraph: function(graph) {
@@ -80,12 +95,22 @@ Crafty.c("GameGraph", {
 		return this.setGameProperty("gamegraph_travelgraph", graph);
 	},
 	
-	gamegraph_setPlayer: function(player) {
-		if (!player) {
-			player = Crafty.e("gameplayer");		
-		}
-		
-		return this.setGameProperty("gamegraph_gameplayer", player);
+	gamegraph_getCurrentPlayer: function() {
+		return this.gamegraph_gameplayers[this.currentPlayerI];
+	},
+	
+	gamegraph_addPlayer: function(player) {
+		if (!player)
+			return;
+		this.gamegraph_gameplayers.push(player);
+		this.attach(player);
+	},
+	
+	gamegraph_removePlayer: function(player) {
+		if (!player)
+			return;
+		this.gamegraph_gameplayers.splice(this.gamegraph_gameplayers.indexOf(player), 1);
+		this.detach(player);
 	},
 	
 	gamegraph_load: function(graph) {
@@ -173,7 +198,7 @@ Crafty.c("GameGraph", {
 	// or if they need to choose a new path to travel on.
 	_gamegraph_sliderHit: function(data) {	
 		// Only add the edge to our traveled list if the player actually traveled the edge
-		var player = this.gamegraph_gameplayer;
+		var player = this.gamegraph_getCurrentPlayer();
 		if (player.slideTarget.x == data.x && player.slideTarget.y == data.y) {
 			this.gamegraph_travelgraph.graphdraw_tryAddEdge(
 				new Crafty.math.Vector2D(data.x, data.y),
@@ -185,7 +210,7 @@ Crafty.c("GameGraph", {
 	_gamegraph_checkForSyscall: function(e) {
 		// Let each syscall check whether they"re colliding with the player or not
 		for (var i in this.gamegraph_syscalls) {
-			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_gameplayer);
+			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
 		}
 	},
 	

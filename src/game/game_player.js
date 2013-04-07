@@ -2,14 +2,18 @@ Crafty.c("GamePlayer", {
 	gameplayer_graph: null,
 	gameplayer_hud: null,
 	gameplayer_slideTarget: null,
+	gameplayer_lastGraphY: 0,
 	_gameplayer_require: "GamePiece, Slider, Ellipse, StateMachine",
+	
+	_enabledFill: "#FFFFFF",
+	_disabledFill: "#888888",
 	
 	init: function() {
 		this.bind("Remove", this._gameplayer_onRemove).requires(this._gameplayer_require)
 		.attr({
 			lineWidth: 5,
 			onClose: "fill",
-			fillStyle: "#FFFFFF",
+			fillStyle: this._enabledFill,
 			w: 30,
 			h: 30
 		});
@@ -51,17 +55,18 @@ Crafty.c("GamePlayer", {
 			this.bind(R.Event.KeyDown, this._gameplayer_onHudChoice);
 		};
 		this.onUnregister[R.States.chooseDirection] = function(state, data) {
-			if (state !== this.DISABLED_STATE)
-				this.gameplayer_hud.visible = false;
+			this.gameplayer_hud.visible = false;
 			this.unbind(R.Event.KeyDown, this._gameplayer_onHudChoice);
 		};
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
+			this.fillStyle = this._disabledFill;
 			this.unbind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].disableMachine();
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
+			this.fillStyle = this._enabledFill;
 			this.bind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();		

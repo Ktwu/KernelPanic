@@ -83,23 +83,18 @@ Crafty.c('Exec', {
 		// We'll then get the graph to scroll back up to the top.  Then, we'll
 		// get rid of the old player.
 		var exec = this;
-		var oldPlayer = graph.gamegraph_gameplayer;
+		var oldPlayer = graph.gamegraph_getCurrentPlayer();
 		var newPlayer = KernelPanic.currentLevel.gamelevel_createPlayer(graph);
 		
-		// A silly hack to get the new player to start drawing its HUD immediately on creation.
+		graph.gamegraph_removePlayer(oldPlayer);
 		newPlayer.enableDrawing();
-		var start = graph.graph_labelSet('start');
-		newPlayer.enableMachine(R.States.chooseDirection, { hitX: start.x1, hitY: start.y1 });
-		newPlayer.disableMachine();
-		
-		// Keep the old player attached to the graph
 		graph.attach(oldPlayer);
 		
 		// Communicate our behavior to the current level to scroll back to y = 0!
 		// And we sort of do this by hijacking its state machine.  Totally legit!
 		var seekFunction = function() {
 			if (this.seekVehicle.seek())
-				this.transitionTo(R.States.levelNormal);
+				this.transitionTo(R.States.normal);
 		};
 		
 		KernelPanic.currentLevel.onRegister[R.States.syscallActive] = function() {
@@ -136,7 +131,22 @@ Crafty.c('Fork', {
 		.attr({
 			steadyStyle: "#FF0000",
 			syscallName: 'Fork'
-		});
+		})
+		.bind(R.Event.syscallActivate, this._fork_activate);
+	},
+	
+	_fork_activate: function(graph) {
+		graph.activeSyscall = null;
+		
+		KernelPanic.currentLevel.gamelevel_createPlayer(graph).enableDrawing();
+		var newId = graph.gamegraph_gameplayers.length - 1;
+		
+		this.transitionTo(R.States.syscallNormal);
+		delete graph.gamegraph_syscalls[this.syscallId];
+		this.destroy();	
+		
+		graph.gamegraph_getCurrentPlayer().gameplayer_hud.gamehud_syscallName = null;
+		KernelPanic.currentLevel.gamelevel_toNextPlayer(newId, true);
 	}
 });
 
@@ -159,14 +169,14 @@ Crafty.c('Vanish', {
 	_vanish_activate: function(graph) {	
 		// Graph, we don't want any input from you
 		graph.transitionTo(R.States.syscallActive);
-		graph._activeSyscall = null;
+		graph.activeSyscall = null;
 		
 		// Ask our level to execute the following function
 		var fadeFunction = function() {
-			var alpha = Math.max(graph.gamegraph_gameplayer.alpha - 0.02, 0);
+			var alpha = Math.max(graph.gamegraph_getCurrentPlayer().alpha - 0.02, 0);
 			graph.cascadePropertySet({alpha: alpha});
 			if (alpha == 0)
-				this.gamelevel_toNextGraph();
+				this.gamelevel_toNextGraph(undefined, true);
 		};
 		
 		KernelPanic.currentLevel.onRegister[R.States.syscallActive] = function() {
@@ -189,6 +199,7 @@ Crafty.c('Vanish', {
 		--KernelPanic.currentLevel.currentI;
 		
 		this.unbind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
+		this._vanish_graph.disableMachine();
 		this._vanish_graph.destroy();		
 	}
 });

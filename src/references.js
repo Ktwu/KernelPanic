@@ -27,7 +27,8 @@ var R = {
 		syscallFocused:  -7,
 		syscallActive:   -8,
 		
-		levelNormal:     -9
+		levelNormal:     -9,
+		playerChange:    -10,
 	},
 	
 	Scene: {
@@ -87,6 +88,28 @@ var D = {
 	css:   null,
 	vector: new Crafty.math.Vector2D(),
 	vector2: new Crafty.math.Vector2D()
+};
+
+var bestLevel = {
+	list: [
+	  [ [150,0], [150,100] ],
+	  [ [150,100], [100,200], [150, 200], [200, 200] ]
+	],
+	
+	vertexBase: [100,-200],
+	
+	start: {
+		x1:150, y1:0, x2:150, y2:100
+	},
+	
+	syscalls: {
+		Fork:   [ [100, 200] ],
+		Exec:   [ [150, 200] ],
+		Vanish: [ [200, 200] ]
+	},
+	
+	strokeStyle: "#FFFFFF",
+	lineWidth: 3
 };
 
 // An adjacency list, where strokes[i] are edge lists, stroke[i][j] are vertices

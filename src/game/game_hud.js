@@ -2,7 +2,7 @@ Crafty.c("GameHud", {
 	gamehud_startVertex: null,
 	gamehud_keyMap: null,
 	gamehud_displacement: 20,
-	gamehud_center: "",
+	gamehud_syscallName: "",
 	gamehud_syscallKey: "SPACE",
 	_gamehud_keyList: ["D", "C", "X", "Z", "A", "Q", "W", "E"],
 	_gamehud_angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
@@ -28,7 +28,7 @@ Crafty.c("GameHud", {
 	_gamehud_onRemove: function() {
 		delete this.gamehud_startVertex;
 		delete this.gamehud_keyMap;
-		delete this.gamehud_center;	
+		delete this.gamehud_syscallName;	
 	},
 	
 	gamehud_clear: function() {
@@ -69,7 +69,7 @@ Crafty.c("GameHud", {
 	
 	gamehud_load: function(data) {
 		var edgeset = data.edgeSet;
-		this.gamehud_center = data.center;
+		this.gamehud_syscallName = data.center;
 		this.gamehud_startVertex = edgeset.startVertex;
 		var ends = edgeset.endVertices;
 		var angle;
@@ -120,7 +120,7 @@ Crafty.c("GameHud", {
 	_gamehud_drawSyscall: function(data) {
 		var ctx = data.ctx;
 		
-		if (this.gamehud_center === null || this.gamehud_center === undefined)
+		if (this.gamehud_syscallName === null || this.gamehud_syscallName === undefined)
 			return;
 			
 		ctx.save();
@@ -138,7 +138,7 @@ Crafty.c("GameHud", {
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillText(this.gamehud_center + "", this.centerX(), this.centerY());	
+		ctx.fillText(this.gamehud_syscallName + "", this.centerX(), this.centerY());	
 		
 		ctx.restore();		
 	},

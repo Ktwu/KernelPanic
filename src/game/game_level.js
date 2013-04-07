@@ -28,11 +28,11 @@ Crafty.c("GameLevel", {
 	_gamelevel_register: function() {	
 		// Callbacks to allow the graphs to scroll on graph change.
 		// When we switch between graphs, we disable input to both and render both.
-		this.onRegister[R.States.levelNormal] = function(oldState, data) {
+		this.onRegister[R.States.normal] = function(oldState, data) {
 			this.bind(R.Event.EnterFrame, this._gamelevel_enterFrame)
 			.bind(R.Event.KeyDown, this._gamelevel_keydown);
 		};
-		this.onUnregister[R.States.levelNormal] = function() {
+		this.onUnregister[R.States.normal] = function() {
 			this.unbind(R.Event.EnterFrame, this._gamelevel_enterFrame)
 			.unbind(R.Event.KeyDown, this._gamelevel_keydown);
 		};
@@ -56,17 +56,16 @@ Crafty.c("GameLevel", {
 				
 				fromGraph.disableMachine();		
 				toGraph.attr({
-					x: fromGraph.x + distance
+					x: fromGraph.x + distance,
+					y: toGraph.gamegraph_getCurrentPlayer().gameplayer_lastGraphY
 				});				
-			}
-				
-			if (this.fromGraphI >= 0) {					
+								
 				fromGraph.disableMachine();
 				this.seekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
-				this.bind(R.Event.EnterFrame, this._gamelevel_graphChange);
+				this.bind(R.Event.EnterFrame, this._gamelevel_change);
 			} else {
 				toGraph.enableMachine();
-				this.transitionTo(R.States.levelNormal);
+				this.transitionTo(R.States.normal);
 			} 	
 		};
 		// After switching between graphs, disable drawing the older graph and
@@ -75,12 +74,26 @@ Crafty.c("GameLevel", {
 			if (this.fromGraphI >= 0)
 				this.graphs[this.fromGraphI].disableDrawing();				
 			this.graphs[this.toGraphI].enableMachine();
-			this.unbind(R.Event.EnterFrame, this._gamelevel_graphChange);
+			this.unbind(R.Event.EnterFrame, this._gamelevel_change);
 			
 			Crafty.trigger(R.Event.levelGraphSwitched, {
 				oldGraph: (this.fromGraphI >= 0) ? this.graphs[this.fromGraphI] : null,
 				newGraph: this.graphs[this.toGraphI]
 			});
+		};
+		
+		this.onRegister[R.States.playerChange] = function() {
+			// Our data is the ID of the graph we"re switching to.
+			var graph = this.graphs[this.currentI];				
+			graph.disableMachine();
+			this.seekVehicle.setSeek(graph, {x: graph.x, y: graph.gamegraph_getCurrentPlayer().gameplayer_lastGraphY});
+			this.bind(R.Event.EnterFrame, this._gamelevel_change);
+		};
+		// After switching between graphs, disable drawing the older graph and
+		// enable control over the new graph.
+		this.onUnregister[R.States.playerChange] = function() {
+			this.unbind(R.Event.EnterFrame, this._gamelevel_change);
+			this.graphs[this.currentI].enableMachine();
 		};
 	},
 	
@@ -114,8 +127,8 @@ Crafty.c("GameLevel", {
 		var hud = Crafty.e("GameHud").centerOn(player.centerX(), player.centerY());
 			
 		player.gameplayer_setGraph(graph);
-		graph.gamegraph_setPlayer(player);
-		graph.gamegraph_gameplayer.gameplayer_setHud(hud);
+		player.gameplayer_setHud(hud);
+		graph.gamegraph_addPlayer(player);
 			
 		// Uh...should probably set the game to wait for user input by default
 		var keys = player.gameplayer_hud.gamehud_lineToKeyPair(start.x1, start.y1, start.x2, start.y2);
@@ -123,6 +136,7 @@ Crafty.c("GameLevel", {
 			start.x1, start.y1, keys[0],
 			start.x2, start.y2, keys[1]
 		);
+		player.gameplayer_lastGraphY = 0;
 		
 		// Prepare the player to be enabled...
 		// ...by using a silly hack to get the new player to start drawing its HUD immediately on creation.
@@ -131,23 +145,57 @@ Crafty.c("GameLevel", {
 		
 		return player;	
 	},
+
+	gamelevel_getCurrentGraph: function() {
+		return this.graphs[this.currentI];
+	},
 	
-	gamelevel_toNextGraph: function() {
-		if (this.graphs.length > 1)
+	gamelevel_toNextPlayer: function(i, beSafe) {
+		var graph = this.graphs[this.currentI];
+		var secondIndex = graph.currentPlayerI + 1;
+		
+		if (beSafe)
+			secondIndex %= graph.gamegraph_gameplayers.length;
+			
+		i = (i === undefined) ? secondIndex : i;
+		if (this.graphs[this.currentI].gamegraph_setNewPlayer(i)) {
+			this.transitionTo(R.States.playerChange);
+			return true;
+		}
+		return false;
+	},
+	
+	gamelevel_toNextGraph: function(i, beSafe) {
+		var secondIndex = this.currentI + 1;
+		
+		if (beSafe)
+			secondIndex %= this.graphs.length;
+			
+		i = (i === undefined) ? secondIndex : i;
+		if (this.graphs.length > 1) {
 			this.transitionTo(R.States.graphChange, (this.currentI+ 1) % this.graphs.length);
+			return true;
+		}
+		return false;
 	},
 	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
-		if (key == "S" && this.currentState != R.States.graphChange) {
-			this.gamelevel_toNextGraph();
+		if (key == "S" && this.currentState == R.States.normal) {
+			// Should we transition between players instead?
+			// If not, tell the graph which player to set for next time, then
+			// switch to a new graph instead.
+			if (!this.gamelevel_toNextPlayer()) {
+				this.graphs[this.currentI].gamegraph_setNewPlayer(0, true);
+				this.gamelevel_toNextGraph(undefined, true);
+			}
 		}	
 	},
 	
-	_gamelevel_graphChange: function() {
+	_gamelevel_change: function() {
 		// Scroll the viewport until we"re centered on our new graph.
 		if (this.seekVehicle.seek()) {
-			this.transitionTo(R.States.levelNormal);
+			this.transitionTo(R.States.normal);
 		}
 	},
 	
@@ -158,7 +206,7 @@ Crafty.c("GameLevel", {
 		
 		// TODO At some point we need some real death.
 		// Real death should...restart the level.
-		var player = this.graphs[this.currentI].gamegraph_gameplayer;			
+		var player = this.graphs[this.currentI].gamegraph_getCurrentPlayer();			
 		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
 			this._gamelevel_destroy();
 			Crafty.scene(R.Scene.game);
