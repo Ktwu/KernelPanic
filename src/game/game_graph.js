@@ -4,8 +4,8 @@ Crafty.c("GameGraph", {
 	gamegraph_travelgraph: null,
 	gamegraph_gameplayers: null,
 	gamegraph_syscalls: null,
+	gamegraph_mutexes: null,
 	
-	activeSyscall: null,
 	currentPlayerI: 0,
 	
 	init: function() {
@@ -17,6 +17,7 @@ Crafty.c("GameGraph", {
 		});		
 		this.gamegraph_syscalls = {};
 		this.gamegraph_gameplayers = [];
+		this.gamegraph_mutexes = [];
 		
 		this._gamegraph_register();
 	},
@@ -26,7 +27,7 @@ Crafty.c("GameGraph", {
 		delete this.gamegraph_travelgraph;
 		delete this.gamegraph_gameplayers;
 		delete this.gamegraph_syscalls;
-		delete this.activeSyscall;
+		delete this.gamegraph_mutexes;
 	},
 	
 	_gamegraph_register: function() {		
@@ -51,18 +52,14 @@ Crafty.c("GameGraph", {
 		});
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
-			this.unbind(R.Event.syscallFocused, this._gamegraph_syscallFocused)
-			.unbind(R.Event.syscallActivate, this._gamegraph_onSyscallActivate)
-			.unbind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
+			this.unbind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
 			.unbind(R.Event.sliderHit, this._gamegraph_sliderHit);
+			this.gamegraph_getCurrentPlayer().disableMachine();
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].disableMachine();
-			this.gamegraph_getCurrentPlayer().disableMachine();
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
-			this.bind(R.Event.syscallFocused, this._gamegraph_syscallFocused)
-			.bind(R.Event.syscallActivate, this._gamegraph_onSyscallActivate)
-			.bind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
+			this.bind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
 			.bind(R.Event.sliderHit, this._gamegraph_sliderHit);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();	
@@ -166,6 +163,35 @@ Crafty.c("GameGraph", {
 				}
 			}
 		}
+		
+		var mutexes = graph.mutexes;
+		if (mutexes) {
+			for (var i = 0; i < mutexes.length; ++i) {
+				var mutex = Crafty.e("Mutex");
+				mutex.isLocked = mutexes[i].isLocked;
+								
+				var locks = mutexes[i].locks;
+				var keys = mutexes[i].keys;
+				
+				this.attach(mutex);
+				this.gamegraph_mutexes.push(mutex);
+				
+				
+				// Add the graph points, not actual locations
+				// since we're drawing a batch of mutex locks/keys.
+				for (var j = 0; j < locks.length; ++j) {
+					mutex.mutex_addLock(new Crafty.math.Vector2D(
+						locks[j][0] * scaleX,
+						locks[j][1] * scaleY));	
+				}
+				
+				for (var j = 0; j < keys.length; ++j) {
+					mutex.mutex_addKey(new Crafty.math.Vector2D(
+						keys[j][0] * scaleX,
+						keys[j][1] * scaleY));	
+				}
+			}
+		}
 
 		// Set up the initial start
 		this.startData = { hitX: start.x1, hitY: start.y1 };
@@ -205,27 +231,15 @@ Crafty.c("GameGraph", {
 				new Crafty.math.Vector2D(data.otherX, data.otherY)
 			);
 		}
+		
+		for (var i in this.gamegraph_mutexes) {
+			this.gamegraph_mutexes[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
+		}
 	},
 
-	_gamegraph_checkForSyscall: function(e) {
-		// Let each syscall check whether they"re colliding with the player or not
+	_gamegraph_checkForSyscall: function() {
 		for (var i in this.gamegraph_syscalls) {
 			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
 		}
-	},
-	
-	_gamegraph_syscallFocused: function(e) {
-		// We may change our focus to a new syscall, otherwise if we lose focus
-		// we set our active syscall to null.
-		if (e.isFocused) {
-			this.activeSyscall = e.syscall;
-		} else if (e.syscall == this.activeSyscall) {
-			this.activeSyscall = null;
-		}
-	},
-	
-	_gamegraph_onSyscallActivate: function(data) {
-		if (this.activeSyscall)
-			this.activeSyscall.trigger(R.Event.syscallActivate, this);
-	},
+	}
 });

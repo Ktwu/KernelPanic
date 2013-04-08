@@ -49,6 +49,10 @@ Crafty.c("GameLevel", {
 			
 			toGraph.enableDrawing();
 			
+			// Silly hack to get the new player to render on top
+			var player = toGraph.gamegraph_getCurrentPlayer();
+			player.disableDrawing().enableDrawing();
+			
 			if (this.fromGraphI >= 0 ) {				
 				distance = (this.toGraphI < this.fromGraphI) ?
 					-Math.max(Crafty.canvas._canvas.width, toGraph.w) :
@@ -88,6 +92,10 @@ Crafty.c("GameLevel", {
 			graph.disableMachine();
 			this.seekVehicle.setSeek(graph, {x: graph.x, y: graph.gamegraph_getCurrentPlayer().gameplayer_lastGraphY});
 			this.bind(R.Event.EnterFrame, this._gamelevel_change);
+			
+			// Silly hack to get the new player to render on top
+			var player = graph.gamegraph_getCurrentPlayer();
+			player.disableDrawing().enableDrawing();
 		};
 		// After switching between graphs, disable drawing the older graph and
 		// enable control over the new graph.
@@ -200,9 +208,9 @@ Crafty.c("GameLevel", {
 	},
 	
 	_gamelevel_enterFrame: function() {
-		this.graphs[this.currentI].attr({
-			y: this.graphs[this.currentI].y - 0.5
-		});
+		//this.graphs[this.currentI].attr({
+		//	y: this.graphs[this.currentI].y - 0.5
+		//});
 		
 		// TODO At some point we need some real death.
 		// Real death should...restart the level.

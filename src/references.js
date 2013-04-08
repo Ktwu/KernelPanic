@@ -23,12 +23,14 @@ var R = {
 		graphChange:     -4,
 		playerMovement:  -5,
 		
-		syscallNormal:   -6,
-		syscallFocused:  -7,
-		syscallActive:   -8,
+		normal:   -6,
+		focused:  -7,
+		active:   -8,
 		
 		levelNormal:     -9,
 		playerChange:    -10,
+		
+		suspended:       -11,
 	},
 	
 	Scene: {
@@ -93,7 +95,8 @@ var D = {
 var bestLevel = {
 	list: [
 	  [ [150,0], [150,100] ],
-	  [ [150,100], [100,200], [150, 200], [200, 200] ]
+	  [ [150,100], [100,200], [150, 200], [200,200] ],
+	  [ [150, 200], [100,300], [200,300] ]
 	],
 	
 	vertexBase: [100,-200],
@@ -107,6 +110,15 @@ var bestLevel = {
 		Exec:   [ [150, 200] ],
 		Vanish: [ [200, 200] ]
 	},
+	
+	// Mutexes are sets of locks and sets of keys
+	mutexes: [ 
+		{
+			locks: [ [100,300] ],
+			keys:  [ [200,300] ],
+			isLocked: false
+		},
+	],
 	
 	strokeStyle: "#FFFFFF",
 	lineWidth: 3

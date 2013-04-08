@@ -142,7 +142,7 @@ Crafty.c('CustomDraw', {
 	
 	disableDrawing: function() {
 		if (!this.isDrawingEnabled)
-			return;
+			return this;
 			
 		this.isDrawingEnabled = false;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
@@ -155,11 +155,12 @@ Crafty.c('CustomDraw', {
 					this._children[i].disableDrawing();
 			}
 		}
+		return this;
 	},
 	
 	enableDrawing: function() {
 		if (this.isDrawingEnabled)
-			return;
+			return this;
 			
 		this.isDrawingEnabled = true;
 		for (var i = 0; i < this.drawFunctions.length; ++i) {
@@ -171,7 +172,8 @@ Crafty.c('CustomDraw', {
 				if (this._children[i].enableDrawing)
 					this._children[i].enableDrawing();
 			}
-		}		
+		}
+		return this;		
 	}
 });
 
@@ -872,9 +874,9 @@ Crafty.c('Ellipse', {
 	ctx.restore();
 	
 	// Stroke or fill
+	ctx.closePath();
 	ctx[this.onClose]();
 		
-	ctx.closePath();
 	ctx.restore();
   }
 });

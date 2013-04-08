@@ -1,9 +1,9 @@
 Crafty.c("GamePlayer", {
+	_gameplayer_require: "GamePiece, Slider, Ellipse, StateMachine",
 	gameplayer_graph: null,
 	gameplayer_hud: null,
 	gameplayer_slideTarget: null,
 	gameplayer_lastGraphY: 0,
-	_gameplayer_require: "GamePiece, Slider, Ellipse, StateMachine",
 	
 	_enabledFill: "#FFFFFF",
 	_disabledFill: "#888888",
@@ -15,7 +15,8 @@ Crafty.c("GamePlayer", {
 			onClose: "fill",
 			fillStyle: this._enabledFill,
 			w: 30,
-			h: 30
+			h: 30,
+			activeSyscall: null,
 		});
 			
 		this.slideTarget = new Crafty.math.Vector2D();	
@@ -26,6 +27,7 @@ Crafty.c("GamePlayer", {
 		delete this.gameplayer_graph;
 		delete this.gameplayer_hud;
 		delete this.gameplayer_slideTarget;
+		delete this.activeSyscall;
 	},
 	
 	_gameplayer_register: function() {
@@ -61,15 +63,15 @@ Crafty.c("GamePlayer", {
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
 			this.fillStyle = this._disabledFill;
-			this.unbind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
-			for (var i in this.gamegraph_syscalls)
-				this.gamegraph_syscalls[i].disableMachine();
+			this.unbind(R.Event.focused, this._gamegraph_focused);
+			if (this.activeSyscall)
+				this.activeSyscall.transitionTo(R.States.suspended);
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
 			this.fillStyle = this._enabledFill;
-			this.bind(R.Event.syscallFocused, this._gamegraph_syscallFocused);
-			for (var i in this.gamegraph_syscalls)
-				this.gamegraph_syscalls[i].enableMachine();		
+			this.bind(R.Event.focused, this._gamegraph_focused);
+			if (this.activeSyscall)
+				this.activeSyscall.transitionTo(R.States.focused);
 		};
 	},
 	
@@ -116,7 +118,7 @@ Crafty.c("GamePlayer", {
 		graph.trigger(R.Event.sliderHit, data);
 
 		var data = {
-			center: (graph.activeSyscall) ? graph.activeSyscall.syscallName : null,
+			center: (this.activeSyscall) ? this.activeSyscall.syscallName : null,
 			hitX: data.x,
 			hitY: data.y
 		};
@@ -124,8 +126,8 @@ Crafty.c("GamePlayer", {
 		this.transitionTo(R.States.chooseDirection, data);	
 	},
 	
-	_gameplayer_moved: function(data) {
-		this.gameplayer_graph.trigger(R.Event.playerMovement, data);
+	_gameplayer_moved: function() {
+		this.gameplayer_graph.trigger(R.Event.playerMovement);
 	},
 	
 	_gameplayer_onHudChoice: function(e) {
@@ -138,8 +140,8 @@ Crafty.c("GamePlayer", {
 			this.gameplayer_putOnLine(start.x, start.y, this.gameplayer_hud.gamehud_oppositeKey(key),
 				end.x, end.y, key);
 			this.transitionTo(R.States.move);
-		} else if (this.gameplayer_graph.activeSyscall && key == this.gameplayer_hud.gamehud_syscallKey) {
-			this.gameplayer_graph.trigger(R.Event.syscallActivate, this);
+		} else if (this.activeSyscall && key == this.gameplayer_hud.gamehud_syscallKey) {
+			this.activeSyscall.trigger(R.Event.syscallActivate, this.gameplayer_graph);
 		}
 	},
 });

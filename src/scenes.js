@@ -1,6 +1,6 @@
 Crafty.scene(R.Scene.game, function() {
 	KernelPanic.UI.innerHTML = "";
-	KernelPanic.currentLevel = Crafty.e('GameLevel').load([bestLevel, testLevel, level1, level2]);
+	KernelPanic.currentLevel = Crafty.e('GameLevel').load([bestLevel, testLevel]);
 });
 
 Crafty.scene(R.Scene.intro, function() {
