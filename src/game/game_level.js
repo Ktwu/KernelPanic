@@ -95,7 +95,6 @@ Crafty.c("GameLevel", {
 			
 			// Silly hack to get the new player to render on top
 			var player = graph.gamegraph_getCurrentPlayer();
-			player.disableDrawing().enableDrawing();
 		};
 		// After switching between graphs, disable drawing the older graph and
 		// enable control over the new graph.

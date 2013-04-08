@@ -73,8 +73,11 @@ Crafty.c("GameGraph", {
 			
 		var currPlayer = this.gamegraph_getCurrentPlayer();
 		currPlayer.gameplayer_lastGraphY = this.y;
+		currPlayer.cascadePropertySet({z:0});
 		currPlayer.disableMachine();
 		this.currentPlayerI = newPlayerI;
+		currPlayer = this.gamegraph_getCurrentPlayer();
+		currPlayer.cascadePropertySet({z:1});
 		this.gamegraph_getCurrentPlayer().enableMachine();
 		this.transitionTo(R.States.normal);
 		return true;	
