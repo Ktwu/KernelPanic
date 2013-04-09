@@ -242,17 +242,17 @@ Crafty.c("GameGraph", {
 		}
 		
 		for (var i in this.gamegraph_mutexes) {
-			this.gamegraph_mutexes[i].trigger(R.States.sliderHit, this.gamegraph_getCurrentPlayer());
+			this.gamegraph_mutexes[i].trigger(R.Event.sliderHit, this.gamegraph_getCurrentPlayer());
 		}
 	},
 
 	_gamegraph_onPlayerMove: function() {
 		for (var i in this.gamegraph_syscalls) {
-			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
+			this.gamegraph_syscalls[i].trigger(R.Event.playerMovement, this.gamegraph_getCurrentPlayer());
 		}
 		
 		for (var i in this.gamegraph_mutexes) {
-			this.gamegraph_mutexes[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
+			this.gamegraph_mutexes[i].trigger(R.Event.playerMovement, this.gamegraph_getCurrentPlayer());
 		}
 	}
 });

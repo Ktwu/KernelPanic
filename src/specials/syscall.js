@@ -21,10 +21,10 @@ Crafty.c('Syscall', {
 		this.drawFunctions.push(this._syscall_changeGradient);
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
-			this.unbind(R.States.playerMovement, this._syscall_checkForCollision);
+			this.unbind(R.Event.playerMovement, this._syscall_checkForCollision);
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
-			this.bind(R.States.playerMovement, this._syscall_checkForCollision);
+			this.bind(R.Event.playerMovement, this._syscall_checkForCollision);
 		};
 		
 		this.onRegister[R.States.focused] = function(oldState, player) {
@@ -104,10 +104,10 @@ Crafty.c('Exec', {
 		KernelPanic.currentLevel.onRegister[R.States.active] = function() {
 			// Remember, the context this is called in is the level.
 			this.seekVehicle.setSeek(graph, {x: graph.x, y: 0});
-			this.bind('EnterFrame', seekFunction);
+			this.bind(R.Event.EnterFrame, seekFunction);
 		};
 		KernelPanic.currentLevel.onUnregister[R.States.active] = function() {
-			this.unbind('EnterFrame', seekFunction);
+			this.unbind(R.Event.EnterFrame, seekFunction);
 			
 			// Exec, stop freaking out, you're no longer active.
 			// In fact, we're getting rid of you
@@ -184,10 +184,10 @@ Crafty.c('Vanish', {
 		};
 		
 		KernelPanic.currentLevel.onRegister[R.States.active] = function() {
-			this.bind('EnterFrame', fadeFunction);
+			this.bind(R.Event.EnterFrame, fadeFunction);
 		};
 		KernelPanic.currentLevel.onUnregister[R.States.active] = function() {
-			this.unbind('EnterFrame', fadeFunction);
+			this.unbind(R.Event.EnterFrame, fadeFunction);
 		};
 
 		this._vanish_graph = graph;

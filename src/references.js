@@ -47,6 +47,7 @@ var R = {
 		syscallFocused: 		"SyscallFocused",
 		syscallActivate: 		"SyscallActivate",
 		levelGraphSwitched: 	"LevelGraphSwitched",
+		playerMovement:         "PlayerMovement",
 		
 		Change: "Change",
 		Remove: "Remove",

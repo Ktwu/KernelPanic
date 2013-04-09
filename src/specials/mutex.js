@@ -4,8 +4,8 @@ Crafty.c("Mutex", {
 		
 	init: function() {
 		this.bind("Remove", this._mutex_onRemove).requires("2D, CustomDraw")
-		.bind(R.States.playerMovement, this._mutex_onPlayerMovement)
-		.bind(R.States.sliderHit, this._mutex_onSliderHit)
+		.bind(R.Event.playerMovement, this._mutex_onPlayerMovement)
+		.bind(R.Event.sliderHit, this._mutex_onSliderHit)
 		.attr({
 			x: 0,
 			y: 0,
@@ -80,7 +80,7 @@ Crafty.c("Mutex", {
 		}
 		
 		player.hasMutexPass = false;
-		if (this.inMutexLockZone == this)
+		if (player.inMutexLockZone == this)
 			player.inMutexLockZone = null;
 		
 		for (var i = 0; i < this.unlockedGroup.length; ++i) {
@@ -99,8 +99,11 @@ Crafty.c("Mutex", {
 	
 	_mutex_onSliderHit: function(player) {
 		if (player.inMutexLockZone == this) {
-			// this is unfortunate.  Disable the player's choices on their HUD.
+			// this is unfortunate.  Only allow the player to backpeddle away from the
+			// mutex center.
 			player.hasMutexPass = false;
+			player.multi_undoMove();
+			player.transitionTo(R.States.move)
 		}
 		
 		if (player.inMutexUnlockZone == this) {

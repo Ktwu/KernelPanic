@@ -305,6 +305,9 @@ Crafty.c("MultiInput", {
 	multi_undoMove: function () {
 		this.x -= this._movement.x;
 		this.y -= this._movement.y;
+		
+		if (this._movement.x != 0 || this._movement.y != 0)
+			this.trigger('Moved', { x: -this._movement.x, y: -this._movement.y });
 	},
 	
 	multi_clearCooloff: function () {
