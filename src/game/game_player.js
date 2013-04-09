@@ -2,8 +2,14 @@ Crafty.c("GamePlayer", {
 	_gameplayer_require: "GamePiece, Slider, Ellipse, StateMachine",
 	gameplayer_graph: null,
 	gameplayer_hud: null,
-	gameplayer_slideTarget: null,
+	
+	otherSlideTarget: null,
+	slideTarget: null,
 	gameplayer_lastGraphY: 0,
+	
+	inMutexLockZone: null,
+	inMutexUnlockZone: null,
+	hasMutexPass: null,
 	
 	_enabledFill: "#FFFFFF",
 	_disabledFill: "#888888",
@@ -17,17 +23,20 @@ Crafty.c("GamePlayer", {
 			w: 30,
 			h: 30,
 			activeSyscall: null,
+			slideTarget: new Crafty.math.Vector2D(),
+			otherSlideTarget: new Crafty.math.Vector2D()
 		});
-			
-		this.slideTarget = new Crafty.math.Vector2D();	
 		this._gameplayer_register();
 	},
 	
 	_gameplayer_onRemove: function() {
 		delete this.gameplayer_graph;
 		delete this.gameplayer_hud;
-		delete this.gameplayer_slideTarget;
+		delete this.slideTarget;
+		delete this.otherSlideTarget;
 		delete this.activeSyscall;
+		delete this.inMutexLockZone;
+		delete this.inMutexUnlockZone;
 	},
 	
 	_gameplayer_register: function() {
@@ -115,15 +124,17 @@ Crafty.c("GamePlayer", {
 	
 	_gameplayer_sliderHit: function(data) {
 		var graph = this.gameplayer_graph;
-		graph.trigger(R.Event.sliderHit, data);
-
-		var data = {
+		var playerHitData = {
 			center: (this.activeSyscall) ? this.activeSyscall.syscallName : null,
 			hitX: data.x,
 			hitY: data.y
 		};
 
-		this.transitionTo(R.States.chooseDirection, data);	
+		this.otherSlideTarget.x = data.otherX;
+		this.otherSlideTarget.y = data.otherY;
+		
+		this.transitionTo(R.States.chooseDirection, playerHitData);
+		graph.trigger(R.Event.sliderHit, data);
 	},
 	
 	_gameplayer_moved: function() {

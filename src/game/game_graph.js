@@ -52,14 +52,14 @@ Crafty.c("GameGraph", {
 		});
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
-			this.unbind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
+			this.unbind(R.Event.playerMovement, this._gamegraph_onPlayerMove)
 			.unbind(R.Event.sliderHit, this._gamegraph_sliderHit);
 			this.gamegraph_getCurrentPlayer().disableMachine();
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].disableMachine();
 		};
 		this.onUnregister[this.DISABLED_STATE] = function() {
-			this.bind(R.Event.playerMovement, this._gamegraph_checkForSyscall)
+			this.bind(R.Event.playerMovement, this._gamegraph_onPlayerMove)
 			.bind(R.Event.sliderHit, this._gamegraph_sliderHit);
 			for (var i in this.gamegraph_syscalls)
 				this.gamegraph_syscalls[i].enableMachine();	
@@ -80,6 +80,12 @@ Crafty.c("GameGraph", {
 		currPlayer.cascadePropertySet({z:1});
 		this.gamegraph_getCurrentPlayer().enableMachine();
 		this.transitionTo(R.States.normal);
+		
+		// Player movement triggers checks for changes in the graph.
+		// Since other players may have changed the state of the graph,
+		// Figure out our new place in the world.
+		this._gamegraph_onPlayerMove();
+		
 		return true;	
 	},
 	
@@ -236,13 +242,17 @@ Crafty.c("GameGraph", {
 		}
 		
 		for (var i in this.gamegraph_mutexes) {
-			this.gamegraph_mutexes[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
+			this.gamegraph_mutexes[i].trigger(R.States.sliderHit, this.gamegraph_getCurrentPlayer());
 		}
 	},
 
-	_gamegraph_checkForSyscall: function() {
+	_gamegraph_onPlayerMove: function() {
 		for (var i in this.gamegraph_syscalls) {
 			this.gamegraph_syscalls[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
+		}
+		
+		for (var i in this.gamegraph_mutexes) {
+			this.gamegraph_mutexes[i].trigger(R.States.playerMovement, this.gamegraph_getCurrentPlayer());
 		}
 	}
 });

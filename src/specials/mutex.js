@@ -5,16 +5,16 @@ Crafty.c("Mutex", {
 	init: function() {
 		this.bind("Remove", this._mutex_onRemove).requires("2D, CustomDraw")
 		.bind(R.States.playerMovement, this._mutex_onPlayerMovement)
+		.bind(R.States.sliderHit, this._mutex_onSliderHit)
 		.attr({
 			x: 0,
 			y: 0,
-			locks: [],
-			keys: [],
+			lockedGroup: [],
+			unlockedGroup: [],
 			baseColor: "#222222",
 			symbolColor: "#FFFF00",
 			lineWidth: 5,		
 			mutexRadius: 40,
-			isLocked: false,
 			_mutex_maxX: -Number.MAX_VALUE,
 			_mutex_maxY: -Number.MAX_VALUE,
 		});	
@@ -22,12 +22,12 @@ Crafty.c("Mutex", {
 	},
 	
 	mutex_addLock: function(lock) {
-		this.locks.push(lock);
+		this.lockedGroup.push(lock);
 		this._mutex_updateDimensions(lock);
 	},
 	
 	mutex_addKey: function(key) {
-		this.keys.push(key);
+		this.unlockedGroup.push(key);
 		this._mutex_updateDimensions(key);
 	},
 
@@ -49,10 +49,10 @@ Crafty.c("Mutex", {
 	
 	_mutex_onRemove: function() {
 		this.unbind(R.States.playerMovement, this._mutex_onPlayerMovement);
-		this.keys.length = 0;
-		this.locks.length = 0;
-		delete this.keys;
-		delete this.locks;
+		this.unlockedGroup.length = 0;
+		this.lockedGroup.length = 0;
+		delete this.unlockedGroup;
+		delete this.lockedGroup;
 		delete this.v1;
 		delete this.v2;
 	},
@@ -66,25 +66,53 @@ Crafty.c("Mutex", {
 		v1.x = player.centerX();
 		v1.y = player.centerY();
 		
+		// Check the locked group first
 		var diffSquared = Math.pow(this.mutexRadius + player.w/2, 2);
-		for (var i = 0; i < this.locks.length; ++i) {
-			v2.x = base._x + this.locks[i].x;
-			v2.y = base._y + this.locks[i].y;
+		for (var i = 0; i < this.lockedGroup.length; ++i) {
+			v2.x = base._x + this.lockedGroup[i].x;
+			v2.y = base._y + this.lockedGroup[i].y;
 
 			if (v2.subtract(v1).magnitudeSq() < diffSquared) {
-				this.isLocked = true;
+				player.inMutexLockZone = this;
+				player.inMutexUnlockZone = null;
 				return;
 			}
 		}
 		
-		for (var i = 0; i < this.keys.length; ++i) {
-			v2.x = base._x + this.keys[i].x;
-			v2.y = base._y + this.keys[i].y;
+		player.hasMutexPass = false;
+		if (this.inMutexLockZone == this)
+			player.inMutexLockZone = null;
+		
+		for (var i = 0; i < this.unlockedGroup.length; ++i) {
+			v2.x = base._x + this.unlockedGroup[i].x;
+			v2.y = base._y + this.unlockedGroup[i].y;
 			
 			if (v2.subtract(v1).magnitudeSq() < diffSquared) {
-				this.isLocked = false;
+				player.inMutexUnlockZone = this;
 				return;
 			}
+		}
+		
+		if (player.inMutexUnlockZone == this)
+			player.inMutexUnlockZone = null;
+	},
+	
+	_mutex_onSliderHit: function(player) {
+		if (player.inMutexLockZone == this) {
+			// this is unfortunate.  Disable the player's choices on their HUD.
+			player.hasMutexPass = false;
+		}
+		
+		if (player.inMutexUnlockZone == this) {
+			// Oh cool, now we get to swap stuff.  Awesome.
+			// If the player was 
+			var temp = this.unlockedGroup;
+			this.unlockedGroup = this.lockedGroup;
+			this.lockedGroup = temp;
+			
+			// The player locks its zone, but we give it a free pass to move
+			// about in the unlocked zone.
+			player.hasMutexPass = true;
 		}
 	},
 	
@@ -92,37 +120,31 @@ Crafty.c("Mutex", {
 		var ctx = data.ctx;
 		var transX = data.pos._x - this._parent.graphdraw_vertexBaseX + this.mutexRadius + this.lineWidth/2;
 		var transY = data.pos._y - this._parent.graphdraw_vertexBaseY + this.mutexRadius + this.lineWidth/2;
-		var lockSymbol = (this.isLocked) ? this._mutex_drawX : this._mutex_drawCircle;
 				
 		ctx.save();
 		ctx.lineWidth = this.lineWidth;
 		ctx.strokeStyle = this.symbolColor;
 		ctx.fillStyle = this.baseColor;
-
-		//ctx.globalAlpha = 0.5;
-		//ctx.fillRect(data.pos._x, data.pos._y, data.pos._w, data.pos._h);
-		//ctx.globalAlpha = 1.0;
-		
 		ctx.translate(transX, transY);
-			
-		for (var i = 0; i < this.locks.length; ++i) {
-			var l = this.locks[i];
-			this._mutex_drawCircle(ctx, l.x, l.y, this.mutexRadius, "fill");
-			lockSymbol.call(this, ctx, l.x, l.y, this.mutexRadius * .55, "stroke");
+		
+		// If we're locked, then lockedGroup are Xs, unlockedGroup are Os	
+		for (var i = 0; i < this.lockedGroup.length; ++i) {
+			var l = this.lockedGroup[i];
+			this._mutex_drawO(ctx, l.x, l.y, this.mutexRadius, "fill");
+			this._mutex_drawX(ctx, l.x, l.y, this.mutexRadius * .55);
 		}
 		
-		for (var i = 0; i < this.keys.length; ++i) {
-			var k = this.keys[i];
-			this._mutex_drawCircle(ctx, k.x, k.y, this.mutexRadius, "fill");
-			this._mutex_drawCircle(ctx, k.x, k.y, this.mutexRadius * .55, "stroke");
-			this._mutex_drawX(ctx, k.x, k.y, this.mutexRadius * .55);
+		for (var i = 0; i < this.unlockedGroup.length; ++i) {
+			var k = this.unlockedGroup[i];
+			this._mutex_drawO(ctx, k.x, k.y, this.mutexRadius, "fill");
+			this._mutex_drawO(ctx, k.x, k.y, this.mutexRadius * .55, "stroke");
 		}
 
 		ctx.translate(-transX, -transY);
 		ctx.restore();
 	},
 	
-	_mutex_drawCircle: function(ctx, x, y, r, drawFunc) {
+	_mutex_drawO: function(ctx, x, y, r, drawFunc) {
 		r -= this.lineWidth/2
 		ctx.beginPath();
 		ctx.save();

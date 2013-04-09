@@ -207,9 +207,9 @@ Crafty.c("GameLevel", {
 	},
 	
 	_gamelevel_enterFrame: function() {
-		//this.graphs[this.currentI].attr({
-		//	y: this.graphs[this.currentI].y - 0.5
-		//});
+		this.graphs[this.currentI].attr({
+			y: this.graphs[this.currentI].y - 0.5
+		});
 		
 		// TODO At some point we need some real death.
 		// Real death should...restart the level.
