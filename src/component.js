@@ -670,6 +670,25 @@ Crafty.c('GraphDraw', {
 		return absPos;
 	},
 	
+	// What is the offset I need to add to my (x,y) such that the graph point
+	// (x1,y1) appears at real-world location (x2,y2)?
+	graphdraw_getVertexToRealWorldOffset: function(x1, y1, x2, y2) {
+		// Our real-world location of our point.
+		var base = this.graphdraw_vertexBase();
+		return {
+			x: x2-(base._x+x1),
+			y: y2-(base._y+y1)
+		};
+	},
+	
+	graphdraw_setVertexToRealWorld: function(x1, x2, y1, y2) {
+		var base = this.graphdraw_vertexBase();
+		this.attr({
+			x: x + (x2-base._x-x1),
+			y: y + (y2-base._y-x1)
+		});
+	},
+	
 	_graphdraw_updateDimensions: function(v1, v2) {
 		this._graphdraw_maxX = Math.max(this._graphdraw_maxX, Math.max(v1.x, v2.x));
 		this._graphdraw_maxY = Math.max(this._graphdraw_maxY, Math.max(v1.y, v2.y));

@@ -78,7 +78,9 @@ Crafty.c('Exec', {
 		.bind(R.Event.syscallActivate, this._exec_activate);
 	},
 	
-	_exec_activate: function(graph) {		
+	_exec_activate: function(graph) {
+		uiConsole.addLine(R.UiConsoleMessages.EXEC);
+			
 		// Graph, we don't want any input from you.  Shut up for a bit.
 		graph.transitionTo(R.States.active);
 		graph.gamegraph_getCurrentPlayer().activeSyscall = null;
@@ -140,6 +142,8 @@ Crafty.c('Fork', {
 	},
 	
 	_fork_activate: function(graph) {
+		uiConsole.addLine(R.UiConsoleMessages.FORK);
+		
 		graph.gamegraph_getCurrentPlayer().activeSyscall = null;
 		
 		KernelPanic.currentLevel.gamelevel_createPlayer(graph).enableDrawing();
@@ -171,6 +175,8 @@ Crafty.c('Vanish', {
 	// Afterwards we swap to another graph and destroy the one that vanished.
 	// TODO decrease visibility of entire graph
 	_vanish_activate: function(graph) {	
+		uiConsole.addLine(R.UiConsoleMessages.VANISH);
+		
 		// Graph, we don't want any input from you
 		graph.transitionTo(R.States.active);
 		graph.gamegraph_getCurrentPlayer().activeSyscall = null;
@@ -179,8 +185,12 @@ Crafty.c('Vanish', {
 		var fadeFunction = function() {
 			var alpha = Math.max(graph.gamegraph_getCurrentPlayer().alpha - 0.02, 0);
 			graph.cascadePropertySet({alpha: alpha});
-			if (alpha == 0)
-				this.gamelevel_toNextGraph(undefined, true);
+			if (alpha == 0) {
+				if (this.graphs.length == 1)
+					this.trigger(R.Event.Win);
+				else
+					this.gamelevel_toNextGraph(undefined, true);
+			}
 		};
 		
 		KernelPanic.currentLevel.onRegister[R.States.active] = function() {

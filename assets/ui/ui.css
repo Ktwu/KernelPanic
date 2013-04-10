@@ -1,3 +1,4 @@
+/* MAIN PAGE CSS */
 body {
 	background-color: #444444;
 	text-align: center;
@@ -24,6 +25,7 @@ body {
 	color: #AAA;
 }
 
+/* TEST UI CSS */
 h1.testUI {
 	font-size: 24px;
 	font-family: Arial;
@@ -38,4 +40,23 @@ p.testUI {
 	text-align: left;
 	padding-right: 150px;
 	padding-left: 150px;
+}
+
+/* CONSOLE CSS */
+div.console {
+	background: black;
+	float: left;
+	position: relative;
+	overflow-y: scroll;
+	width: 30%;
+	height: 100%;
+}
+
+p.console {
+	color: #00FF00;	 		/* bright green */
+	font-family: Courier;
+	font-size: 16px;
+	padding-right: 50px;
+	padding-left:  50px;
+	text-align: left;
 }

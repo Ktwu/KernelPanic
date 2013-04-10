@@ -3,7 +3,10 @@ Crafty.c("GameLevel", {
 		
 	init: function() {
 		// bind for game-specific functions
-		this.requires(this._gamelevel_require);
+		this.requires(this._gamelevel_require)
+		.bind(R.Event.Win, this._gamelevel_onWin)
+		.bind(R.Event.Lose, this._gamelevel_onLose);
+		
 		this.graphs = [];
 		this.seekVehicle = Crafty.e("Vehicle");
 		this.fromGraphI = -1;
@@ -14,6 +17,10 @@ Crafty.c("GameLevel", {
 	},
 	
 	_gamelevel_destroy: function() {
+		// Empty out our callbacks -- we don't care about cleaning up state
+		this.onRegister = {};
+		this.onUnregister = {};
+		
 		this.disableMachine();
 		this.graphs.length = 0;
 		delete this.graphs;
@@ -49,10 +56,9 @@ Crafty.c("GameLevel", {
 			
 			toGraph.enableDrawing();
 			
-			// Silly hack to get the new player to render on top
-			var player = toGraph.gamegraph_getCurrentPlayer();
-			player.disableDrawing().enableDrawing();
-			
+			// So I want to seek the viewport such that the difference between the viewport's
+			// final X and the graph's centered X (where its X is after centering its start point)
+			// is the scale width.  Why iqqqzaazaaaasn't this easy.
 			if (this.fromGraphI >= 0 ) {				
 				distance = (this.toGraphI < this.fromGraphI) ?
 					-Math.max(Crafty.canvas._canvas.width, toGraph.w) :
@@ -65,7 +71,11 @@ Crafty.c("GameLevel", {
 				});				
 								
 				fromGraph.disableMachine();
-				this.seekVehicle.setSeek(Crafty.viewport, {x: Crafty.viewport.x - distance, y: 0});
+				this.seekVehicle.setSeek(Crafty.viewport, {
+						x: -(toGraph.graphdraw_vertexBase()._x + toGraph.graph_labelSet('start').x1 - KernelPanic.settings.getGraphCenterOnX()),
+						y: 0
+				});
+				
 				this.bind(R.Event.EnterFrame, this._gamelevel_change);
 			} else {
 				toGraph.enableMachine();
@@ -112,7 +122,7 @@ Crafty.c("GameLevel", {
 				.gamegraph_setTravelGraph()
 				.gamegraph_load(graphs[i])
 				.graph_makeUndirected()
-				.centerOnX(Crafty.canvas._canvas.width/2);
+				.centerOnX(KernelPanic.settings.getGraphCenterOnX());
 				
 			this.graphs[i].gamegraph_travelgraph.attr({
 				lineWidth: 5,
@@ -180,7 +190,7 @@ Crafty.c("GameLevel", {
 			
 		i = (i === undefined) ? secondIndex : i;
 		if (this.graphs.length > 1) {
-			this.transitionTo(R.States.graphChange, (this.currentI+ 1) % this.graphs.length);
+			this.transitionTo(R.States.graphChange, secondIndex);
 			return true;
 		}
 		return false;
@@ -215,8 +225,19 @@ Crafty.c("GameLevel", {
 		// Real death should...restart the level.
 		var player = this.graphs[this.currentI].gamegraph_getCurrentPlayer();			
 		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
-			this._gamelevel_destroy();
-			Crafty.scene(R.Scene.game);
+			this.trigger(R.Event.Lose);
 		}
+	},
+	
+	_gamelevel_onLose: function() {
+		console.log('lose');
+		this._gamelevel_destroy();
+		Crafty.scene(R.Scene.game);
+	},
+	
+	_gamelevel_onWin: function() {
+		console.log('win');
+		this._gamelevel_destroy();
+		Crafty.scene(R.Scene.prototype_intro);
 	}
 });

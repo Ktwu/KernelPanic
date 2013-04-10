@@ -80,8 +80,10 @@ Crafty.c("Mutex", {
 		}
 		
 		player.hasMutexPass = false;
-		if (player.inMutexLockZone == this)
+		if (player.inMutexLockZone == this) {
 			player.inMutexLockZone = null;
+			player.isMutexMessageDisabled = false;
+		}
 		
 		for (var i = 0; i < this.unlockedGroup.length; ++i) {
 			v2.x = base._x + this.unlockedGroup[i].x;
@@ -99,6 +101,11 @@ Crafty.c("Mutex", {
 	
 	_mutex_onSliderHit: function(player) {
 		if (player.inMutexLockZone == this) {
+			if (!player.isMutexMessageDisabled) {
+				uiConsole.addLine(R.UiConsoleMessages.MUTEX_HIT_LOCK);
+				player.isMutexMessageDisabled = true;
+			}
+			
 			// this is unfortunate.  Only allow the player to backpeddle away from the
 			// mutex center.
 			player.hasMutexPass = false;
@@ -107,6 +114,8 @@ Crafty.c("Mutex", {
 		}
 		
 		if (player.inMutexUnlockZone == this) {
+			uiConsole.addLine(R.UiConsoleMessages.MUTEX_HIT_UNLOCK);
+			
 			// Oh cool, now we get to swap stuff.  Awesome.
 			// If the player was 
 			var temp = this.unlockedGroup;

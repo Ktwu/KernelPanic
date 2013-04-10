@@ -5,6 +5,11 @@ var KernelPanic = {
 	settings: {
 		scaleX: 3,
 		scaleY: 1,
+		
+		getGraphCenterOnX: function() {
+			// Graphs appears such that their center point is 2/3rds of the screen width
+			return Crafty.canvas._canvas.width * 2/3;
+		}
 	}
 };
 
@@ -13,7 +18,8 @@ var KernelPanic = {
 var R = {	
 	UI: {
 		intro:				"assets/ui/intro.html",  
-		prototype_intro: 	"assets/ui/prototype_intro.html"
+		prototype_intro: 	"assets/ui/prototype_intro.html",
+		console:			"assets/ui/console.html"
 	},
 	
 	States: {
@@ -53,7 +59,10 @@ var R = {
 		Remove: "Remove",
 		KeyDown: "KeyDown",
 		EnterFrame: "EnterFrame",
-		Moved: "Moved"
+		Moved: "Moved",
+		
+		Win: "Win",
+		Lose: "Lose"
 	},
 	
 	Error: {
@@ -77,7 +86,15 @@ var R = {
 		right: new Crafty.math.Vector2D(1,0)
 	},
 	
-	CodeToKey: {}
+	CodeToKey: {},
+	
+	UiConsoleMessages: {
+		FORK:   "Activated FORK syscall.  A new player has been made for you to control.",
+		EXEC:   "Activated EXEC syscall.  You've been reset to the program's start.",
+		VANISH: "Activated VANISH syscall.  Congratulations, your program has terminated.",
+		MUTEX_HIT_UNLOCK: "Unlocking mutex (O).  Entering critical area...",
+		MUTEX_HIT_LOCK:   "The mutex is locked (X).  You will have to release it first."
+	}
 };
 
 for (var key in Crafty.keys) {
@@ -92,126 +109,3 @@ var D = {
 	vector: new Crafty.math.Vector2D(),
 	vector2: new Crafty.math.Vector2D()
 };
-
-var bestLevel = {
-	list: [
-	  [ [150,0], [150,100] ],
-	  [ [150,100], [100,200], [150, 200], [200,200] ],
-	  [ [150, 200], [100,300], [200,300] ]
-	],
-	
-	vertexBase: [100,-200],
-	
-	start: {
-		x1:150, y1:0, x2:150, y2:100
-	},
-	
-	syscalls: {
-		Fork:   [ [100, 200] ],
-		Exec:   [ [150, 200] ],
-		Vanish: [ [200, 200] ]
-	},
-	
-	// Mutexes are sets of locks and sets of keys
-	mutexes: [ 
-		{
-			locks: [ [100,300] ],
-			keys:  [ [200,300] ],
-			isLocked: false
-		},
-	],
-	
-	strokeStyle: "#FFFFFF",
-	lineWidth: 3
-};
-
-// An adjacency list, where strokes[i] are edge lists, stroke[i][j] are vertices
-var testLevel = {
-	list: [
-	  [ [150,0], [150,100] ],
-	  [ [150,100], [100,200], [150,400], [200,200] ],
-	  [ [100,200], [150,400] ],
-	  [ [200,200], [200,400] ],
-	  [ [150,400], [100,600] ],
-	  [ [200,400], [150,600] ],
-	  [ [100,600], [100,900] ]
-	],
-	
-	vertexBase: [25,-200],
-	
-	start: {
-		x1:150, y1:0, x2:150, y2:100
-	},
-	
-	syscalls: {
-		Vanish: [ [100,900] ],
-		Exec: [ [150,600] ]
-	},
-	
-	strokeStyle: "#FFFFFF",
-	lineWidth: 3
-};
-
-var level1 = {
-	list: [
-	  [ [150,0], [150,100] ],
-	  [ [150,100], [50,200], [150,200], [250,200] ],
-	  [ [50,200], [150,400], [150,200] ],
-	  [ [150,200], [150,400] ],
-	  [ [250,200], [150,400], [150,200] ],
-	  [ [150,400], [50,600], [150,600], [250,600] ],
-	  [ [50,600], [150,900], [150,600] ],
-	  [ [150,600], [150,900] ],
-	  [ [250,600], [150,900], [150,600]],
-	  [ [150,900], [25,1100] ],
-	  [ [25,1100], [275,1300] ],
-	  [ [275,1300], [150,1500] ],
-	  [ [150,1500], [75,1600], [150,1700], [225,1600] ]
-	],
-	
-	vertexBase: [25,-200],
-	
-	start: {
-		x1:150, y1:0, x2:150, y2:100
-	},
-	
-	syscalls: {
-		Vanish: [ [150,1700] ],
-		Exec: [ [150,600], [75, 1600], [150,1500] ]
-	},
-	
-	strokeStyle: "#FFFFFF",
-	lineWidth: 3
-};
-
-var level2 = {
-	list: [
-	  [ [150,0], [150,100] ],
-	  [ [150,100], [50,200] ],
-	  [ [50,200], [150,400] ],
-	  [ [150,200], [150,400] ],
-	  [ [250,200], [150,400], [150,200] ],
-	  [ [150,400], [50,600] ],
-	  [ [50,600], [150,900], [150,600] ],
-	  [ [150,600], [150,900] ],
-	  [ [250,600], [150,900], [150,600]],
-	  [ [150,900], [25,1100] ],
-	  [ [25,1100], [275,1300] ],
-	  [ [275,1300], [150,1500] ],
-	],
-	
-	vertexBase: [25,-200],
-	
-	start: {
-		x1:150, y1:0, x2:150, y2:100
-	},
-	
-	syscalls: {
-		Fork: [ [150,200] ],
-		Exec: [ [250, 200], [50, 600], [150,1500] ]
-	},
-	
-	strokeStyle: "#FFFFFF",
-	lineWidth: 3
-};
-

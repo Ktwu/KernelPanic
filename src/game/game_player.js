@@ -143,6 +143,7 @@ Crafty.c("GamePlayer", {
 	
 	_gameplayer_onHudChoice: function(e) {
 		var key = R.CodeToKey[e.key];
+		
 		if (this.gameplayer_hud.gamehud_keyMap[key]) {
 			var end = this.gameplayer_hud.gamehud_keyMap[key].vertex;
 			var start = this.gameplayer_hud.gamehud_startVertex;

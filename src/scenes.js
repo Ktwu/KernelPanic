@@ -1,6 +1,8 @@
 Crafty.scene(R.Scene.game, function() {
-	KernelPanic.UI.innerHTML = "";
-	KernelPanic.currentLevel = Crafty.e('GameLevel').load([bestLevel, testLevel]);
+	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.console];
+	uiConsole.init();
+	
+	KernelPanic.currentLevel = Crafty.e('GameLevel').load([bestLevel, testLevel, level1, level2]);
 });
 
 Crafty.scene(R.Scene.intro, function() {
@@ -48,7 +50,7 @@ Crafty.scene(R.Scene.loading, function() {
 		
 	} else {
 		// Code to load UI files.
-		Crafty.load([R.UI.prototype_intro, R.UI.intro],
+		Crafty.load([R.UI.prototype_intro, R.UI.intro, R.UI.console],
 			function() { Crafty.scene(R.Scene.prototype_intro); },
 			null,
 			function() { D.error = R.Error.loadFail; Crafty.scene(R.Scene.error); }
