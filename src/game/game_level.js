@@ -202,7 +202,7 @@ Crafty.c("GameLevel", {
 			// Should we transition between players instead?
 			// If not, tell the graph which player to set for next time, then
 			// switch to a new graph instead.
-			if (!this.gamelevel_toNextPlayer()) {
+			if (!this.gamelevel_toNextPlayer(undefined, true)) {
 				this.graphs[this.currentI].gamegraph_setNewPlayer(0, true);
 				this.gamelevel_toNextGraph(undefined, true);
 			}
@@ -230,12 +230,18 @@ Crafty.c("GameLevel", {
 	},
 	
 	_gamelevel_onLose: function() {
+		uiConsole.addLine("LOSER >:P");
+		Crafty.assets[R.UI.console] = KernelPanic.UI.innerHTML;
+		
 		console.log('lose');
 		this._gamelevel_destroy();
 		Crafty.scene(R.Scene.game);
 	},
 	
 	_gamelevel_onWin: function() {
+		uiConsole.addLine("You win!");
+		Crafty.assets[R.UI.console] = KernelPanic.UI.innerHTML;
+		
 		console.log('win');
 		this._gamelevel_destroy();
 		Crafty.scene(R.Scene.prototype_intro);

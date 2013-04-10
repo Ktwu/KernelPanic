@@ -3,6 +3,7 @@ var uiConsole = {
 	
 	init: function() {
 		uiConsole.console = document.getElementById("console");
+		uiConsole.scrollToBottom();
 	},
 	
 	scrollToBottom: function() {

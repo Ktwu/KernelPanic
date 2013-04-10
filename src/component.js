@@ -634,20 +634,20 @@ Crafty.c('GraphDraw', {
 				for (var j = 1; j < edgeset.length; ++j) {
 					// If we found our second vertex, just return.  Nothing to add.
 					if (Tools.are2DVEqual(orderedV[1], edgeset[j]))
-						return;
+						return false;
 				}
 				
 				// We didn't find our second vertex.  Time to add it!
 				edgeset.push(orderedV[1]);
 				this._graphdraw_updateDimensions(orderedV[0], orderedV[1]);				
-				return this;
+				return true;
 			}	
 		}
 		
 		// Oh well, we didn't find our edge.  Add it.
 		this._graphdraw_adjacencyList.push(orderedV)
 		this._graphdraw_updateDimensions(orderedV[0], orderedV[1]);
-		return this;
+		return true;
 	},
 	
 	graphdraw_offsetX: function() {
@@ -750,6 +750,8 @@ Crafty.c('GraphDraw', {
 
 
 Crafty.c('Graph', {
+	graph_numEdges: 0,
+	
 	_graph_adjacencyList: null,
 	_graph_labels: null,
 	
@@ -785,6 +787,7 @@ Crafty.c('Graph', {
 		else
 			edges.endVertices.push(v2);
 		
+		++this.graph_numEdges;
 		return this;
 	},
 	
@@ -806,6 +809,7 @@ Crafty.c('Graph', {
 			edges.endVertices.push(v2);
 		}	
 		
+		++this.graph_numEdges;
 		return this;
 	},
 	

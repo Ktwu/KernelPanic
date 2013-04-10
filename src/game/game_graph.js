@@ -6,6 +6,9 @@ Crafty.c("GameGraph", {
 	gamegraph_syscalls: null,
 	gamegraph_mutexes: null,
 	
+	gamegraph_numEdges: 0,
+	gamegraph_numTraversedEdges: 0,
+	
 	currentPlayerI: 0,
 	
 	init: function() {
@@ -140,6 +143,8 @@ Crafty.c("GameGraph", {
 			}
 		}
 		
+		this.gamegraph_numEdges = this.graph_numEdges;
+		
 		var labels = graph.labels;
 		if (labels) {
 			for (var label in labels) {
@@ -208,11 +213,7 @@ Crafty.c("GameGraph", {
 		
 		return this;
 	},
-	
-	gamegraph_addTraveledEdge: function(v1, v2) {
-		this.gamegraph_travelgraph.graphdraw_tryAddEdge(v1, v2);
-	},
-	
+
 	gamegraph_vertexBase: function() {
 		return this.graphdraw_vertexBase();
 	},
@@ -235,10 +236,12 @@ Crafty.c("GameGraph", {
 		// Only add the edge to our traveled list if the player actually traveled the edge
 		var player = this.gamegraph_getCurrentPlayer();
 		if (player.slideTarget.x == data.x && player.slideTarget.y == data.y) {
-			this.gamegraph_travelgraph.graphdraw_tryAddEdge(
+			 if (this.gamegraph_travelgraph.graphdraw_tryAddEdge(
 				new Crafty.math.Vector2D(data.x, data.y),
-				new Crafty.math.Vector2D(data.otherX, data.otherY)
-			);
+				new Crafty.math.Vector2D(data.otherX, data.otherY))) {
+				++this.gamegraph_numTraversedEdges;
+				uiConsole.addLine(this.gamegraph_numTraversedEdges + " vs " + this.gamegraph_numEdges);
+			}
 		}
 		
 		for (var i in this.gamegraph_mutexes) {
