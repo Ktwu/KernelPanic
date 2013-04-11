@@ -44,7 +44,8 @@ var R = {
 		error:			    	"Error",
 		game:     				"Game",
 		prototype_intro:    	"Prototype_Intro",
-		controls: 				"Controls"
+		controls: 				"Controls",
+		editor:					"Editor"
 	},
 	
 	Event: {

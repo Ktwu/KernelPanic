@@ -16,7 +16,6 @@ Crafty.scene(R.Scene.intro, function() {
 			Crafty.scene(R.Scene.game);
 		}
 	};
-	
 	this.bind('KeyDown', fun);
 });
 
@@ -30,7 +29,6 @@ Crafty.scene(R.Scene.prototype_intro, function() {
 			Crafty.scene(R.Scene.game);
 		}
 	};
-	
 	this.bind('KeyDown', fun);
 });
 
@@ -69,10 +67,9 @@ Crafty.scene(R.Scene.error, function() {
 		y : GamOs.height() / 2 - 24,
 		w : GamOs.width()
 	}).css(R.CSS.$text);
-
-	// Load our images and audio here with Crafty.load
-	// Then add our audio to Crafty.  Use mp3, ogg, and aac formats.
-
-	// Start the game
-	Crafty.scene('Game');
 }); 
+
+
+Crafty.scene(R.Scene.editor, function() {
+	var editor = Crafty.e("KernelPanicEditor");
+});

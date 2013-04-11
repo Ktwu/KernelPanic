@@ -1,6 +1,5 @@
-function main() {
+function kernelPanicMain() {
 	// Init everything
-	//Crafty.init(500,500);
 	Crafty.init();
 	Crafty.background('rgb(50,50,50)');
 	Crafty.canvas.init();
@@ -22,5 +21,21 @@ function main() {
 	Crafty.scene(R.Scene.loading);
 };
 
-// Load the game by adding our start function
-window.addEventListener('load', main);
+function kernelPanicEditorMain() {
+	// Init everything
+	Crafty.init();
+	Crafty.background('rgb(50,50,50)');
+	Crafty.canvas.init();
+	Crafty.viewport.clampToEntities = false;
+
+	// Allow this Crafty to receive wheel events
+	Crafty.extend({
+       mouseWheelDispatch: function(e) {
+         Crafty.trigger("MouseWheel", e);
+       }
+    });     
+    Crafty.addEvent(this, "mousewheel", Crafty.mouseWheelDispatch);
+    
+	// Start 
+	Crafty.scene(R.Scene.editor);
+};
