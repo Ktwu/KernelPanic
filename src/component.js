@@ -18,6 +18,52 @@ Crafty.c("GamePiece", {
 	}
 });
 
+Crafty.c("Snappable", {
+	snapX: 1,
+	snapY: 1,
+	
+	_snap_enabled: false,
+	
+	init: function() {
+		this.requires("2D");
+	},
+	
+	enableSnapping: function() {
+		if (this._snap_enabled)
+			return this;
+		this._snap_enabled = true;
+		this.bind("Change", this._snap_onChange);
+		return this;
+	},
+	
+	disableSnapping: function() {
+		if (!this._snap_enabled)
+			return this;
+		this._snap_enabled = false;
+		this.unbind("Change", this._snap_onChange);	
+		return this;	
+	},
+	
+	snap: function() {
+		this._snap_onChange({x: this.x, y: this.y});
+		return this;
+	},
+	
+	_snap_onChange: function(e) {	
+		if (e.x || e.snapX) {
+			var min = this.snapX * Math.floor(this.x / this.snapX);
+			var max = this.snapX * Math.ceil(this.x / this.snapX);
+			this.x = Tools.toClosest(this.x, [min, max]).value;
+		}
+		
+		if (e.y || e.snapY) {
+			var min = this.snapY * Math.floor(this.y / this.snapY);
+			var max = this.snapY * Math.ceil(this.y / this.snapY);
+			this.y = Tools.toClosest(this.y, [min, max]).value;			
+		}
+	}
+});
+
 Crafty.c('Cascader', {
 	cascadePropertySet: function(attrObj) {
 		this.attr(attrObj);

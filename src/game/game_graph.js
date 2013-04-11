@@ -143,8 +143,6 @@ Crafty.c("GameGraph", {
 			}
 		}
 		
-		this.gamegraph_numEdges = this.graph_numEdges;
-		
 		var labels = graph.labels;
 		if (labels) {
 			for (var label in labels) {

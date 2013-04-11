@@ -3,7 +3,7 @@ var KernelPanic = {
 	currentLevel: null,
 	UI: null,
 	settings: {
-		scaleX: 3,
+		scaleX: 1,
 		scaleY: 1,
 		
 		getGraphCenterOnX: function() {

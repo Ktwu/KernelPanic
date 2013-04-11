@@ -126,7 +126,8 @@ Crafty.c("GameLevel", {
 				
 			this.graphs[i].gamegraph_travelgraph.attr({
 				lineWidth: 5,
-				strokeStyle: "#00FF66"
+				strokeStyle: "#00FF66",
+				gamegraph_numEdges: this.graphs[i].graph_numEdges/2;
 			});
 			
 			this.gamelevel_createPlayer(this.graphs[i]);
