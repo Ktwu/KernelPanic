@@ -123,12 +123,17 @@ Crafty.c("GamePlayer", {
 		.slide_applySettings();
 	},
 	
-	_gameplayer_speed: function(time, speed) {
-		return Math.min(time/100, 10);
+	_gameplayer_speed: function(time, speed, contributedSpeed, sharedData) {
+		var startSpeed = sharedData.lastReleaseSpeed ? sharedData.lastReleaseSpeed : 0;
+		return Math.min(time/50 + startSpeed, 10);
 	},
 	
-	_gameplayer_releaseSpeed: function(time, releaseSpeed, speed) {
-		speed -= 0.5;  return speed < 1 ? NaN : speed;
+	_gameplayer_releaseSpeed: function(time, speed, contributedSpeed, sharedData) {
+		// The contributed speed is the dot product between the player's movement
+		// and the direction of our key's desired movement.    
+		speed = contributedSpeed < 0.1 ? NaN : contributedSpeed;
+		sharedData.lastReleaseSpeed = speed ? speed : 0;
+		return speed;	
 	},
 	
 	_gameplayer_sliderHit: function(data) {

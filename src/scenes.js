@@ -4,7 +4,7 @@ Crafty.scene(R.Scene.game, function() {
 	
 	KernelPanic.currentLevel = Crafty.e('GameLevel')
 		.attr({
-			objDataToLoad: [level3, level4, level5, level6, level7]
+			objDataToLoad: [level7]
 		})
 		.enableMachine(R.States.graphChange, 0);
 	//KernelPanic.currentLevel = Crafty.e('GameLevel').load([level8]);

@@ -350,14 +350,13 @@ Crafty.c("MultiInput", {
 	_cooloffMap: null,
 	_keys: null,
 	_movement: null,
+	_previousMovement: null,
 	_multi_enabled: false,
 	
 	init: function() {
 		this.bind("EnterFrame", this._multi_enterframe).bind("Remove", this._multi_onRemove);
-		this._movement = {
-			x: 0,
-			y: 0
-		};
+		this._movement = new Crafty.math.Vector2D(0,0);
+		this._previousMovement = new Crafty.math.Vector2D(0,0);
 		this.multi_clear();
 	},
 	
@@ -366,6 +365,7 @@ Crafty.c("MultiInput", {
 		delete this._cooloffMap;
 		delete this._keys;
 		delete this._movement;
+		delete this._previousMovement;
 	},
 	
 	multi_undoMove: function () {
@@ -399,8 +399,8 @@ Crafty.c("MultiInput", {
 				speedReleaseFunc: speedReleaseFunc,
 				x: Math.round(Math.cos(keys[k] * (Math.PI / 180)) * 1000) / 1000,
 				y: Math.round(Math.sin(keys[k] * (Math.PI / 180)) * 1000) / 1000,
+				savedData: {},
 				lastSpeed: 0,
-				speedOnRelease: 0,
 				startTime: 0
 			};
 			
@@ -457,7 +457,6 @@ Crafty.c("MultiInput", {
 			// Process this lingering movement after the key is released.
 			if (keyInfo.speedReleaseFunc) {
 				keyInfo.startTime = (new Date()).getTime();
-				keyInfo.speedOnRelease = keyInfo.lastSpeed;
 				this._cooloffMap[e.key] = keyInfo;
 			}
 			
@@ -470,11 +469,16 @@ Crafty.c("MultiInput", {
 	
 	_multi_processActive: function () {
 		var keyInfo = null;
+		var tempVector
 		for (var key in this._activeMap) {
 			keyInfo = this._activeMap[key];
 			keyInfo.lastSpeed = keyInfo.speedFunc == null ? 
 				keyInfo.speedNum : 
-				keyInfo.speedFunc((new Date()).getTime() - keyInfo.startTime, keyInfo.lastSpeed);
+				keyInfo.speedFunc(
+					(new Date()).getTime() - keyInfo.startTime,
+					keyInfo.lastSpeed,
+					this._previousMovement.dotProduct(keyInfo),
+					keyInfo.savedData);
 			this._movement.x += keyInfo.lastSpeed * keyInfo.x;
 			this._movement.y += keyInfo.lastSpeed * keyInfo.y;
 		}
@@ -487,8 +491,9 @@ Crafty.c("MultiInput", {
 			keyInfo = this._cooloffMap[key];
 			keyInfo.lastSpeed = keyInfo.speedReleaseFunc(
 				(new Date()).getTime() - keyInfo.startTime, 
-				keyInfo.speedOnRelease, 
-				keyInfo.lastSpeed);
+				keyInfo.lastSpeed,
+				this._previousMovement.dotProduct(keyInfo),
+				keyInfo.savedData);
 			
 			if (isNaN(keyInfo.lastSpeed)) {
 				remove.push(key);
@@ -507,6 +512,8 @@ Crafty.c("MultiInput", {
 		if (!this._multi_enabled) return;
 
 		// Apply our speed function to figure out movement per frame.
+		this._previousMovement.x = this._movement.x;
+		this._previousMovement.y = this._movement.y;
 		this._movement.x = 0;
 		this._movement.y = 0;
 		
