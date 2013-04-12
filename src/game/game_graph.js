@@ -1,6 +1,7 @@
 Crafty.c("GameGraph", {
 	_gamegraph_require: "GamePiece, Graph, GraphDraw, StateMachine",
-		
+	
+	gamegraph_loadedFrom: null,	
 	gamegraph_travelgraph: null,
 	gamegraph_gameplayers: null,
 	gamegraph_syscalls: null,
@@ -70,6 +71,10 @@ Crafty.c("GameGraph", {
 		};
 	},
 	
+	getDefinedCenterX: function() {
+		return this.graphdraw_vertexBase()._x + this.graph_labelSet('start').x1;
+	},
+	
 	gamegraph_setNewPlayer: function(newPlayerI) {	
 		if (newPlayerI < 0 || newPlayerI >= this.gamegraph_gameplayers.length)
 			return false;
@@ -121,7 +126,40 @@ Crafty.c("GameGraph", {
 		this.gamegraph_gameplayers.splice(this.gamegraph_gameplayers.indexOf(player), 1);
 		this.detach(player);
 	},
-	
+
+	gamegraph_reset: function() {
+		this.gamegraph_travelgraph.graphdraw_clear();
+		
+		this.attr({
+			y: 0
+		});
+		
+		// Make all of our old syscalls alive again.
+		var syscalls = this.gamegraph_syscalls;
+		for (var i in syscalls)
+			syscalls[i].syscall_reset();
+			
+		var mutexes = this.gamegraph_mutexes;
+		for (var i = 0; i < mutexes.length; ++i)
+			mutexes[i].mutex_reset();
+
+		// Reset the player at the graph's beginning
+		var players = this.gamegraph_gameplayers;
+		var player = players[0];
+		for (var i = 1; i < players.length; ++i) {
+			players[i].destroy();
+		}
+		players.length = 0;
+		players.push(player);
+		currentPlayerI = 0;
+		player.gameplayer_reset();
+		this.gamegraph_setNewPlayer(0);
+		
+		this.gamegraph_numTraversedEdges = 0;
+		
+		return this;
+	},
+		
 	gamegraph_load: function(graph) {
 		var list = graph.list;
 		var v1, v2;

@@ -37,21 +37,38 @@ Crafty.c('Syscall', {
 				player.activeSyscall = null;
 			}
 		};
+		
+		this.onRegister[R.States.dead] = function() {
+			this.visible = false;
+			this.unbind(R.Event.playerMovement, this._syscall_checkForCollision);
+		};
+		this.onUnregister[R.States.dead] = function(newState) {
+			if (newState != this.DISABLED_STATE) {
+				this.visible = true;
+			}
+			this.bind(R.Event.playerMovement, this._syscall_checkForCollision);
+		};
 
-		this.startState = R.States.syscallNormal;
+		this.startState = R.States.normal;
+	},
+	
+	syscall_reset: function() {
+		this.transitionTo(R.States.normal);
 	},
 	
 	_syscall_checkForCollision: function(player) {
-		//console.log(player);
+		if (this.currentState == R.States.dead)
+			return;
+			
 		if (Math.abs(player.x - this.x) < player.w/2+this.w/2
 			&& Math.abs(player.y - this.y) < player.h/2+this.h/2) {
 				// Did we collide?
-				if (this.currentState == R.States.syscallNormal) 
+				if (this.currentState == R.States.normal) 
 					this.transitionTo(R.States.focused, player);
 		} else {
 			// No collision?
 			if (this.currentState == R.States.focused)
-				this.transitionTo(R.States.syscallNormal, player);
+				this.transitionTo(R.States.normal, player);
 		}
 	},
 	
@@ -98,24 +115,18 @@ Crafty.c('Exec', {
 		
 		// Communicate our behavior to the current level to scroll back to y = 0!
 		// And we sort of do this by hijacking its state machine.  Totally legit!
-		var seekFunction = function() {
-			if (this.seekVehicle.seek())
-				this.transitionTo(R.States.normal);
+		var seekDoneFunction = function() {
+			this.unbind("SeekDone", seekDoneFunction);
+			this.transitionTo(R.States.normal);
 		};
 		
 		KernelPanic.currentLevel.onRegister[R.States.active] = function() {
 			// Remember, the context this is called in is the level.
-			this.seekVehicle.setSeek(graph, {x: graph.x, y: 0});
-			this.bind(R.Event.EnterFrame, seekFunction);
+			this.setSeek({x: graph.x, y: 0}, graph);
+			this.bind("SeekDone", seekDoneFunction);
 		};
 		KernelPanic.currentLevel.onUnregister[R.States.active] = function() {
-			this.unbind(R.Event.EnterFrame, seekFunction);
-			
-			// Exec, stop freaking out, you're no longer active.
-			// In fact, we're getting rid of you
-			exec.transitionTo(R.States.syscallNormal);
-			delete graph.gamegraph_syscalls[exec.syscallId];
-			exec.destroy();
+			exec.transitionTo(R.States.dead);
 			
 			// Kill the old player.
 			graph.detach(oldPlayer);
@@ -143,15 +154,12 @@ Crafty.c('Fork', {
 	
 	_fork_activate: function(graph) {
 		uiConsole.addLine(R.UiConsoleMessages.FORK);
+		this.transitionTo(R.States.dead);
 		
 		graph.gamegraph_getCurrentPlayer().activeSyscall = null;
 		
 		KernelPanic.currentLevel.gamelevel_createPlayer(graph).enableDrawing();
 		var newId = graph.gamegraph_gameplayers.length - 1;
-		
-		this.transitionTo(R.States.syscallNormal);
-		delete graph.gamegraph_syscalls[this.syscallId];
-		this.destroy();	
 		
 		graph.gamegraph_getCurrentPlayer().gameplayer_hud.gamehud_syscallName = null;
 		KernelPanic.currentLevel.gamelevel_toNextPlayer(newId, true);
@@ -186,7 +194,7 @@ Crafty.c('Vanish', {
 			var alpha = Math.max(graph.gamegraph_getCurrentPlayer().alpha - 0.02, 0);
 			graph.cascadePropertySet({alpha: alpha});
 			if (alpha == 0) {
-				if (this.graphs.length == 1)
+				if (this.objDataToLoad.length <= this.currentI+1)
 					this.trigger(R.Event.Win);
 				else
 					this.gamelevel_toNextGraph(undefined, true);
@@ -200,20 +208,20 @@ Crafty.c('Vanish', {
 			this.unbind(R.Event.EnterFrame, fadeFunction);
 		};
 
-		this._vanish_graph = graph;
-		this._vanish_oldI = KernelPanic.currentLevel.currentI;
-		this.bind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
+		///this._vanish_graph = graph;
+		//this._vanish_oldI = KernelPanic.currentLevel.currentI;
+		//this.bind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
 		
 	    // Time to set our level to action!
 		KernelPanic.currentLevel.transitionTo(R.States.active);		
 	},
 	
-	_vanish_removeGraph: function() {
+	/*_vanish_removeGraph: function() {
 		KernelPanic.currentLevel.graphs.splice(this._vanish_oldI, 1);
 		--KernelPanic.currentLevel.currentI;
 		
 		this.unbind(R.Event.levelGraphSwitched, this._vanish_removeGraph);
 		this._vanish_graph.disableMachine();
 		this._vanish_graph.destroy();		
-	}
+	}*/
 });

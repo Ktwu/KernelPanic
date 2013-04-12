@@ -102,6 +102,8 @@ Crafty.c('Vehicle', {
 	slowdownRadius: 100,
 	maxSpeed: 15.0,
 	
+	isSeeking: false,
+	
 	_targetPosition: null,
 	
 	init: function() {
@@ -111,15 +113,25 @@ Crafty.c('Vehicle', {
 	},
 	
 	_vehicle_onRemove: function() {
+		if (this.isSeeking) {
+			this.unbind("EnterFrame", this.seek);
+			this.isSeeking = false;
+		}
+		
 		delete seeker;
 		delete target;
 		delete velocity;
 		delete _targetPosition;
 	},
 	
-	setSeek: function(seeker, target) {
-		this.seeker = seeker;
+	setSeek: function(target, seeker) {
+		this.seeker = (seeker === undefined) ? this : seeker;
 		this.target = target;
+		
+		if (!this.isSeeking) {
+			this.bind("EnterFrame", this.seek);
+			this.isSeeking = true;
+		}
 	},
 	
 	// Courtesy of http://natureofcode.com/book/chapter-6-autonomous-agents/
@@ -135,7 +147,11 @@ Crafty.c('Vehicle', {
 			this.seeker.y = this.target.y;
 			this.velocity.x = 0;
 			this.velocity.y = 0;
-			return true;
+			
+			this.unbind("EnterFrame", this.seek);
+			this.trigger("SeekDone", this.seeker);
+			this.isSeeking = false;
+			return;
 		}
 			
 		if (dist < this.slowdownRadius)
@@ -164,10 +180,9 @@ Crafty.c('Vehicle', {
 			if (this.velocity.y > 0)
 				this.seeker.y += this.velocity.y / Math.abs(this.velocity.y);
 		}
-		
-		return false;
 	},
 });
+
 
 Crafty.c('CustomDraw', {
 	_customDraw_require: "2D, Canvas",
@@ -252,7 +267,7 @@ Crafty.c('StateMachine', {
 	
 	transitionTo: function(state, data) {
 		if (!this.isMachineEnabled)
-			return false;
+			return this;
 			
 		if (this.onUnregister[this.currentState]) {
 			this.onUnregister[this.currentState].call(this, state, data);
@@ -264,11 +279,13 @@ Crafty.c('StateMachine', {
 		if (this.onRegister[state]) {
 			this.onRegister[state].call(this, this.lastState, data);
 		}
+		
+		return this;
 	},
 	
 	enableMachine: function(state, data) {
 		if (this.isMachineEnabled)
-			return;
+			return this;
 		this.isMachineEnabled = true;
 		
 		if (state !== undefined)
@@ -282,13 +299,16 @@ Crafty.c('StateMachine', {
 			this.isMachineStarted = true;
 			this.transitionTo(this.startState, this.startData);
 		}
+		
+		return this;
 	},
 	
 	disableMachine: function(data) {
 		if (!this.isMachineEnabled)
-			return;
+			return this;
 		this.transitionTo(null, data);
 		this.isMachineEnabled = false;
+		return this;
 	}
 });
 
@@ -669,6 +689,12 @@ Crafty.c('GraphDraw', {
 		delete this._graphdraw_adjacencyList;
 	},
 	
+	graphdraw_clear: function() {
+		for (var i = 0; i < this._graphdraw_adjacencyList.length; ++i)
+			this._graphdraw_adjacencyList[i].length = 0;
+		this._graphdraw_adjacencyList.length = 0;
+	},
+	
 	graphdraw_tryAddEdge: function(v1, v2) {
 		var orderedV = [v1.clone(), v2.clone()].sort(Tools.sort2DVFunction);
 		var edgeset;
@@ -714,25 +740,6 @@ Crafty.c('GraphDraw', {
 		absPos._y -= this.graphdraw_offsetY();
 		
 		return absPos;
-	},
-	
-	// What is the offset I need to add to my (x,y) such that the graph point
-	// (x1,y1) appears at real-world location (x2,y2)?
-	graphdraw_getVertexToRealWorldOffset: function(x1, y1, x2, y2) {
-		// Our real-world location of our point.
-		var base = this.graphdraw_vertexBase();
-		return {
-			x: x2-(base._x+x1),
-			y: y2-(base._y+y1)
-		};
-	},
-	
-	graphdraw_setVertexToRealWorld: function(x1, x2, y1, y2) {
-		var base = this.graphdraw_vertexBase();
-		this.attr({
-			x: x + (x2-base._x-x1),
-			y: y + (y2-base._y-x1)
-		});
 	},
 	
 	_graphdraw_updateDimensions: function(v1, v2) {

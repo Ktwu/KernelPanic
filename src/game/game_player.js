@@ -84,6 +84,11 @@ Crafty.c("GamePlayer", {
 		};
 	},
 	
+	gameplayer_reset: function() {
+		this.gameplayer_putOnPoint(this.startData.hitX, this.startData.hitY);
+		this.transitionTo(this.startState, this.startData);	
+	},
+	
 	gameplayer_setGraph: function(graph) {
 		this.gameplayer_graph = graph;
 		return this;
@@ -95,6 +100,10 @@ Crafty.c("GamePlayer", {
 			hud.centerOn(this.centerX(), this.centerY());
 		}	
 		return this.setGameProperty("gameplayer_hud", hud);
+	},
+	
+	gameplayer_putOnPoint: function(x, y) {
+		this.gameplayer_putOnLine(x, y, [], x, y, []);
 	},
 	
 	gameplayer_putOnLine: function(x1, y1, key1, x2, y2, key2) {	

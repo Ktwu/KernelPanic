@@ -18,6 +18,8 @@ Crafty.c("Mutex", {
 			_mutex_maxX: -Number.MAX_VALUE,
 			_mutex_maxY: -Number.MAX_VALUE,
 		});	
+		
+		this.originalLockedGroup = this.lockedGroup;
 		this.drawFunctions.push(this._mutex_draw);
 	},
 	
@@ -40,6 +42,13 @@ Crafty.c("Mutex", {
 		this.x = this._parent.x + this._parent.lineWidth/2 - this.mutexRadius - this.lineWidth/2;
 		this.y = this._parent.y + this._parent.lineWidth/2 - this.mutexRadius - this.lineWidth/2;
 	},
+	
+	mutex_reset: function() {
+		if (this.unlockedGroup == this.originalLockedGroup) {
+			this.unlockedGroup = this.lockedGroup;
+			this.lockedGroup = this.originalLockedGroup;
+		}
+	},
 		
 	_mutex_updateDimensions: function(v) {
 		this._mutex_maxX = Math.max(this._mutex_maxX, v.x);
@@ -53,6 +62,7 @@ Crafty.c("Mutex", {
 		this.lockedGroup.length = 0;
 		delete this.unlockedGroup;
 		delete this.lockedGroup;
+		delete this.originalLockedGroup;
 		delete this.v1;
 		delete this.v2;
 	},

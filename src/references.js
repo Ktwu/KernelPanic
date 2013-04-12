@@ -37,6 +37,7 @@ var R = {
 		playerChange:    -10,
 		
 		suspended:       -11,
+		dead:            -12,
 	},
 	
 	Scene: {
