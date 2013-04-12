@@ -60,3 +60,26 @@ p.console {
 	padding-left:  50px;
 	text-align: left;
 }
+
+/* POPUP CSS */
+div.popup {
+	background: black;
+	float: none;
+	position: relative;
+	overflow-y: hidden;
+	width: 100%;
+	height: 100%;
+}
+
+p.popup {
+	color: #00FF00;	 		/* bright green */
+	font-family: Courier;
+	font-size: 16px;
+	padding-right: 50px;
+	padding-left:  50px;
+	text-align: center;
+}
+
+#toConsoleData {
+	display: none;
+}

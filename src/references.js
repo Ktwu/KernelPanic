@@ -19,7 +19,13 @@ var R = {
 	UI: {
 		intro:				"assets/ui/intro.html",  
 		prototype_intro: 	"assets/ui/prototype_intro.html",
-		console:			"assets/ui/console.html"
+		console:			"assets/ui/console.html",
+		
+		popup_move:			"assets/ui/popup_move.html",
+		popup_scroll:		"assets/ui/popup_scroll.html",
+		popup_exec:			"assets/ui/popup_exec.html",
+		popup_mutex:		"assets/ui/popup_mutex.html",
+		popup_fork:			"assets/ui/popup_fork.html"
 	},
 	
 	States: {
@@ -60,6 +66,7 @@ var R = {
 		Change: "Change",
 		Remove: "Remove",
 		KeyDown: "KeyDown",
+		KeyUp: "KeyUp",
 		EnterFrame: "EnterFrame",
 		Moved: "Moved",
 		

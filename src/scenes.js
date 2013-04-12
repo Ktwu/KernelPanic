@@ -1,13 +1,50 @@
+// Loading scene
+// Handles the loading of binary assets such as images and audio files
+Crafty.scene(R.Scene.loading, function() {
+	// Simple loading screen
+	Crafty.e('2D, DOM, Text').text('Loading...').attr({
+		x : 0,
+		y : Crafty.canvas._canvas.height / 2 - 24,
+		w : Crafty.canvas._canvas.width
+	}).css(R.CSS.$text);
+	
+	// First check whether all of our requirements are met
+	if (!Crafty.support.canvas) {
+		D.error = R.Error.noCanvas;
+		Crafty.scene(R.Scene.error);
+		
+	} else {
+		// Code to load UI files.
+		var uis = [];
+		for (var i in R.UI)
+			uis.push(R.UI[i]);
+			
+		Crafty.load(uis,
+			function() { Crafty.scene(R.Scene.prototype_intro); },
+			null,
+			function() { D.error = R.Error.loadFail; Crafty.scene(R.Scene.error); }
+		);
+	}
+}); 
+
 Crafty.scene(R.Scene.game, function() {
 	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.console];
 	uiConsole.init();
 	
 	KernelPanic.currentLevel = Crafty.e('GameLevel')
 		.attr({
-			objDataToLoad: [level7]
+			objDataToLoad: [
+				R.UI.popup_move, level1, 
+				R.UI.popup_scroll, level2,
+				R.UI.popup_exec, level3,
+				level4,
+				level5,
+				R.UI.popup_mutex,
+				level6,
+				R.UI.popup_fork, level7
+			]
 		})
 		.enableMachine(R.States.graphChange, 0);
-	//KernelPanic.currentLevel = Crafty.e('GameLevel').load([level8]);
 });
 
 Crafty.scene(R.Scene.intro, function() {
@@ -35,32 +72,6 @@ Crafty.scene(R.Scene.prototype_intro, function() {
 	};
 	this.bind('KeyDown', fun);
 });
-
-// Loading scene
-// Handles the loading of binary assets such as images and audio files
-Crafty.scene(R.Scene.loading, function() {
-	// Simple loading screen
-	Crafty.e('2D, DOM, Text').text('Loading...').attr({
-		x : 0,
-		y : Crafty.canvas._canvas.height / 2 - 24,
-		w : Crafty.canvas._canvas.width
-	}).css(R.CSS.$text);
-	
-	// First check whether all of our requirements are met
-	if (!Crafty.support.canvas) {
-		D.error = R.Error.noCanvas;
-		Crafty.scene(R.Scene.error);
-		
-	} else {
-		// Code to load UI files.
-		Crafty.load([R.UI.prototype_intro, R.UI.intro, R.UI.console],
-			function() { Crafty.scene(R.Scene.prototype_intro); },
-			null,
-			function() { D.error = R.Error.loadFail; Crafty.scene(R.Scene.error); }
-		);
-	}
-}); 
-
 
 // Error scene
 // If the browser doesn't support something we need, go here.

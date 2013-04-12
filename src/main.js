@@ -16,6 +16,7 @@ function kernelPanicMain() {
 	KernelPanic.UI.style.display = "block";
 	KernelPanic.UI.style.width = Crafty.canvas._canvas.width + "px";
 	KernelPanic.UI.style.height = Crafty.canvas._canvas.height + "px";
+	KernelPanic.UI.style.zIndex = "100";
 	
 	// Start 
 	Crafty.scene(R.Scene.loading);

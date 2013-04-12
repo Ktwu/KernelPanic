@@ -1,7 +1,6 @@
 Crafty.c("GameGraph", {
 	_gamegraph_require: "GamePiece, Graph, GraphDraw, StateMachine",
-	
-	gamegraph_loadedFrom: null,	
+		
 	gamegraph_travelgraph: null,
 	gamegraph_gameplayers: null,
 	gamegraph_syscalls: null,

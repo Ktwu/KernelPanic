@@ -11,6 +11,12 @@ var uiConsole = {
 		c.scrollTop = c.scrollHeight;		
 	},
 	
+	addHTML: function(newText) {
+		uiConsole.console.innerHTML += newText;
+		uiConsole.scrollToBottom();
+		console.log("Added " + newText);	
+	},
+	
 	addLine: function(newText) {
 		uiConsole.console.innerHTML += "<p class='console'>$ " + newText + "</p>";
 		uiConsole.scrollToBottom();

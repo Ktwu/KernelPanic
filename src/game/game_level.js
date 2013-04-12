@@ -68,8 +68,7 @@ Crafty.c("GameLevel", {
 			// Case I: Scroll someting into view, but don't worry about our old object
 			if (!fromObj && toObj) {
 				toObj.attr({
-					x: Crafty.viewport.x + Crafty.viewport.width,
-					y: 0
+					x: Crafty.viewport.x + Crafty.viewport.width
 				});
 				scrollToX = -(toObj.getDefinedCenterX() - KernelPanic.settings.getGraphCenterOnX());
 			}
@@ -82,8 +81,7 @@ Crafty.c("GameLevel", {
 			// Case III:  Scroll from and to objects
 			else if (fromObj && toObj) {
 				toObj.attr({
-					x: fromObj.x + fromObj.w + Crafty.viewport.width,
-					y: 0
+					x: fromObj.x + fromObj.w + Crafty.viewport.width
 				});
 				scrollToX = -(toObj.getDefinedCenterX() - KernelPanic.settings.getGraphCenterOnX());	
 			}
@@ -119,20 +117,26 @@ Crafty.c("GameLevel", {
 	},
 	
 	load: function(objData) {
-		// Right now we only load graphs
-		var obj = Crafty.e("GameGraph")
-			.gamegraph_setTravelGraph()
-			.gamegraph_load(objData)
-			.graph_makeUndirected()
-			.centerOnX(KernelPanic.settings.getGraphCenterOnX());
-			
-		obj.gamegraph_travelgraph.attr({
-			lineWidth: 5,
-			strokeStyle: "#00FF66",
-		});
-			
-		obj.gamegraph_numEdges = obj.graph_numEdges / 2;
-		this.gamelevel_createPlayer(obj);
+		var obj = null;
+		
+		if (typeof objData == "string") {
+			obj = Crafty.e("GamePopup")
+				.popup_load(Crafty.assets[objData]);
+		} else {
+			obj = Crafty.e("GameGraph")
+				.gamegraph_setTravelGraph()
+				.gamegraph_load(objData)
+				.graph_makeUndirected()
+				.centerOnX(KernelPanic.settings.getGraphCenterOnX());
+				
+			obj.gamegraph_travelgraph.attr({
+				lineWidth: 5,
+				strokeStyle: "#00FF66",
+			});
+				
+			obj.gamegraph_numEdges = obj.graph_numEdges / 2;
+			this.gamelevel_createPlayer(obj);
+		}
 		return obj;
 	},
 	
@@ -206,13 +210,15 @@ Crafty.c("GameLevel", {
 	},
 	
 	_gamelevel_enterFrame: function() {
-		this.currentObj.attr({
-			y: this.currentObj.y - 0.5
-		});
-
-		var player = this.currentObj.gamegraph_getCurrentPlayer();			
-		if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
-			this.trigger(R.Event.Lose);
+		if (this.currentObj.__c["GameGraph"]) {
+			this.currentObj.attr({
+				y: this.currentObj.y - 0.5
+			});
+	
+			var player = this.currentObj.gamegraph_getCurrentPlayer();			
+			if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
+				this.trigger(R.Event.Lose);
+			}
 		}
 	},
 	
