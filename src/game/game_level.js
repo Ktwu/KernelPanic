@@ -212,7 +212,7 @@ Crafty.c("GameLevel", {
 	_gamelevel_enterFrame: function() {
 		if (this.currentObj.__c["GameGraph"]) {
 			this.currentObj.attr({
-				y: this.currentObj.y - 0.5
+				y: this.currentObj.y - this.currentObj.speedDown
 			});
 	
 			var player = this.currentObj.gamegraph_getCurrentPlayer();			

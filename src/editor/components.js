@@ -2,7 +2,9 @@ Crafty.c("KernelPanicEditor", {
 	activeNode: null,
 	catcher: null,
 	nodes: [],
+	
 	label: "",	
+	
 	scaleAmount: 1.25,
 	shiftAmount: 50,	
 	keyStrings: {},
@@ -118,12 +120,14 @@ Crafty.c("KernelPanicEditor", {
 		json.vertexBase[0] = Math.min(json.vertexBase[0], node.x);
 		json.vertexBase[1] = Math.min(json.vertexBase[1], node.y);
 		
-		var label = node.nodeLabel._text;
+		
+		var labels = node.nodeLabel._text.split(',');
+		var label = labels[0];
+		
 		if (label == "START") {
 			json.start = {
 				x1: node.x, y1: node.y, x2: node.x, y2: node.y 
 			};
-			return;
 		}
 		
 		// Check for syscall
@@ -132,12 +136,10 @@ Crafty.c("KernelPanicEditor", {
 			if (!json.syscalls[prop])
 				json.syscalls[prop] = [];
 			json.syscalls[prop].push([node.x, node.y]);
-			return;
 		}
 		
 		// Check for mutex
-		var mutexInfo = label.split(',');
-		if (mutexInfo.length == 3) {
+		if (label == "MUTEX") {
 			if (!json.mutexes[mutexInfo[1]])
 				json.mutexes[mutexInfo[1]] = { locks: [], keys: [] };
 			var mutex = json.mutexes[mutexInfo[1]];
@@ -146,6 +148,13 @@ Crafty.c("KernelPanicEditor", {
 				mutex.locks.push([node.x, node.y]);
 			else
 				mutex.keys.push([node.x, node.y]);
+		}
+		
+		// Go through the rest of our label options
+		for (var i = 0; i < labels.length; ++i) {
+			if (labels[i] == 'X') {
+				json.centerX = node.x;
+			}
 		}
 	},
 	
@@ -165,6 +174,7 @@ Crafty.c("KernelPanicEditor", {
 			var node = this.nodes[i];	
 				
 			this.jsonProcessLabel(node, json);
+			json.vertexBase[1] = Math.min(json.vertexBase[1], node.y);
 			
 			list[i].push([node.x, node.y]);
 			var otherNodes = node.otherNodes;
@@ -175,7 +185,7 @@ Crafty.c("KernelPanicEditor", {
 		}
 		
 		// Give our graph a little bit of offset
-		json.vertexBase[1] -= 200;
+		json.vertexBase[1] *= -1;
 		
 		return json;
 	}
@@ -200,7 +210,7 @@ Crafty.c("ScreenMouseCatcher", {
 		});
 		
 		this.bind("NodeDestroy", function(e) {
-			var index = editor.nodes.indexOf(e);
+			var index = this.editor.nodes.indexOf(e);
 			var editor = this.editor;
 			if (index >= 0)
 				editor.nodes.splice(index, 1);
@@ -229,8 +239,8 @@ Crafty.c("ScreenMouseCatcher", {
 				node.node_focus();
 				
 			} else if (Crafty.mouseButtons.RIGHT == e.button) {
-				if (editor.activeNode) {
-					editor.activeNode.node_unfocus();
+				if (this.editor.activeNode) {
+					this.editor.activeNode.node_unfocus();
 				}
 			}
 		})

@@ -10,6 +10,7 @@ Crafty.c("GameGraph", {
 	gamegraph_numTraversedEdges: 0,
 	
 	currentPlayerI: 0,
+	speedDown: 0.5,
 	
 	init: function() {
 		this.bind(R.Event.Remove, this._gamegraph_onRemove).requires(this._gamegraph_require)
@@ -71,7 +72,11 @@ Crafty.c("GameGraph", {
 	},
 	
 	getDefinedCenterX: function() {
-		return this.graphdraw_vertexBase()._x + this.graph_labelSet('start').x1;
+		var centerX = this.graph_labelSet("centerX");
+		
+		return (centerX === undefined)
+			? this.graphdraw_vertexBase()._x + this.graph_labelSet('start').x1
+			: this.graphdraw_vertexBase()._x + centerX;
 	},
 	
 	gamegraph_setNewPlayer: function(newPlayerI) {	
@@ -166,6 +171,9 @@ Crafty.c("GameGraph", {
 		var scaleX = KernelPanic.settings.scaleX;
 		var scaleY = KernelPanic.settings.scaleY;
 		
+		if (graph.speed !== undefined)
+			this.speedDown = graph.speed;
+		
 		this.graphdraw_vertexBaseX = graph.vertexBase[0] * scaleX;
 		this.graphdraw_vertexBaseY = graph.vertexBase[1] * scaleY;
 		this.gamegraph_travelgraph.graphdraw_vertexBaseX = this.graphdraw_vertexBaseX;
@@ -194,6 +202,9 @@ Crafty.c("GameGraph", {
 			y2: graph.start.y2 * scaleY
 		};
 		this.graph_addLabel("start", start);
+		
+		console.log(graph.centerX);
+		this.graph_addLabel("centerX", graph.centerX);
 
 		var syscalls = graph.syscalls;
 		var absPos = this.gamegraph_vertexBase();

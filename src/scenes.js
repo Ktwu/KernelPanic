@@ -20,7 +20,7 @@ Crafty.scene(R.Scene.loading, function() {
 			uis.push(R.UI[i]);
 			
 		Crafty.load(uis,
-			function() { Crafty.scene(R.Scene.prototype_intro); },
+			function() { Crafty.scene(R.Scene.intro); },
 			null,
 			function() { D.error = R.Error.loadFail; Crafty.scene(R.Scene.error); }
 		);
@@ -34,6 +34,7 @@ Crafty.scene(R.Scene.game, function() {
 	KernelPanic.currentLevel = Crafty.e('GameLevel')
 		.attr({
 			objDataToLoad: [
+				testLevel,
 				R.UI.popup_move, level1, 
 				R.UI.popup_scroll, level2,
 				R.UI.popup_exec, level3,
@@ -48,7 +49,6 @@ Crafty.scene(R.Scene.game, function() {
 });
 
 Crafty.scene(R.Scene.intro, function() {
-	console.log(Crafty.assets);
 	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.intro];
 	
 	var fun = function(e) {

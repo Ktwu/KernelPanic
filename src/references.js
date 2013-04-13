@@ -17,15 +17,15 @@ var KernelPanic = {
 // Similar to Android"s reference files
 var R = {	
 	UI: {
-		intro:				"assets/ui/intro.html",  
-		prototype_intro: 	"assets/ui/prototype_intro.html",
-		console:			"assets/ui/console.html",
+		intro:				"intro.html",  
+		prototype_intro: 	"prototype_intro.html",
+		console:			"console.html",
 		
-		popup_move:			"assets/ui/popup_move.html",
-		popup_scroll:		"assets/ui/popup_scroll.html",
-		popup_exec:			"assets/ui/popup_exec.html",
-		popup_mutex:		"assets/ui/popup_mutex.html",
-		popup_fork:			"assets/ui/popup_fork.html"
+		popup_move:			"popup_move.html",
+		popup_scroll:		"popup_scroll.html",
+		popup_exec:			"popup_exec.html",
+		popup_mutex:		"popup_mutex.html",
+		popup_fork:			"popup_fork.html"
 	},
 	
 	States: {
