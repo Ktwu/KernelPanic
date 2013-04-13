@@ -57,14 +57,13 @@ Crafty.c('Syscall', {
 	},
 	
 	_syscall_checkForCollision: function(player) {
-		if (this.currentState == R.States.dead)
+		if (this.currentState == R.States.dead || this.currentState == R.States.active)
 			return;
 			
 		if (Math.abs(player.x - this.x) < player.w/2+this.w/2
 			&& Math.abs(player.y - this.y) < player.h/2+this.h/2) {
 				// Did we collide?
-				if (this.currentState == R.States.normal) 
-					this.transitionTo(R.States.focused, player);
+				this.transitionTo(R.States.focused, player);
 		} else {
 			// No collision?
 			if (this.currentState == R.States.focused)

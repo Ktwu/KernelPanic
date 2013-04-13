@@ -84,6 +84,7 @@ Crafty.c("GameGraph", {
 			return false;
 			
 		var currPlayer = this.gamegraph_getCurrentPlayer();
+		currPlayer.activeSyscall = null;
 		currPlayer.gameplayer_lastGraphY = this.y;
 		currPlayer.cascadePropertySet({z:0});
 		currPlayer.disableMachine();

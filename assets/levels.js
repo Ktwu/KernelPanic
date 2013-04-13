@@ -1,4 +1,4 @@
-var testLevel = {"speed":0.1, "list":[[[100,50]],[[0,200],[100,50]]],"vertexBase":[0,-50],"syscalls":{},"mutexes":[],"strokeStyle":"#FFFFFF","lineWidth":3,"start":{"x1":100,"y1":50,"x2":100,"y2":50},"centerX":0};
+var testLevel = {"list":[[[150,100],[50,200]],[[50,200],[150,100],[100,300]],[[100,300],[50,200]]],"vertexBase":[50,-100],"syscalls":{"Fork":[[50,200]],"Vanish":[[100,300]]},"mutexes":[],"strokeStyle":"#FFFFFF","lineWidth":3,"start":{"x1":150,"y1":100,"x2":150,"y2":100},"centerX":100};
 
 var level1 = {"list":[[[250,50],[250,150]],[[250,150],[200,200],[300,200]],[[200,200]],[[300,200]]],"vertexBase":[200,-150],"syscalls":{"Vanish":[[300,200],[300,200]]},"strokeStyle":"#FFFFFF","lineWidth":3,"start":{"x1":250,"y1":50,"x2":250,"y2":50}};
 
