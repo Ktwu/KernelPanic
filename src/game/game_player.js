@@ -11,6 +11,9 @@ Crafty.c("GamePlayer", {
 	inMutexUnlockZone: null,
 	hasMutexPass: null,
 	
+	lastHitX: 0,
+	lastHitY: 0,
+	
 	_enabledFill: "#FFFFFF",
 	_disabledFill: "#888888",
 	
@@ -58,6 +61,8 @@ Crafty.c("GamePlayer", {
 			if (data) {
 				D.vector.x = data.hitX;
 				D.vector.y = data.hitY;	
+				this.lastHitX = data.hitX;
+				this.lastHitY = data.hitY;
 				data.edgeSet = this.gameplayer_graph.graph_edgeSet(D.vector);
 
 				hud.gamehud_clear();	

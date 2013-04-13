@@ -140,7 +140,7 @@ Crafty.c("GameLevel", {
 		return obj;
 	},
 	
-	gamelevel_createPlayer: function(graph) {
+	gamelevel_createPlayer: function(graph, oldPlayer) {
 		// Set the level"s player.  We might change this depending on whether
 		// it"s better to render the player multiple times.
 		var player = Crafty.e("GamePlayer").multi_disableControl();
@@ -152,10 +152,15 @@ Crafty.c("GameLevel", {
 		graph.gamegraph_addPlayer(player);
 			
 		// The player is, by default, set to wait for user input
-		player.gameplayer_putOnPoint(start.x1, start.y1);
-		player.gameplayer_lastGraphY = 0;
-	
-		player.startData = { hitX: start.x1, hitY: start.y1 };
+		if (oldPlayer) {
+			player.gameplayer_putOnPoint(oldPlayer.lastHitX, oldPlayer.lastHitY);
+			player.gameplayer_lastGraphY = Crafty.viewport.y;
+			player.startData = { hitX: oldPlayer.lastHitX, hitY: oldPlayer.lastHitY };
+		} else {
+			player.gameplayer_putOnPoint(start.x1, start.y1);
+			player.gameplayer_lastGraphY = 0;	
+			player.startData = { hitX: start.x1, hitY: start.y1 };	
+		}
 		player.startState = R.States.chooseDirection;
 		
 		return player;	

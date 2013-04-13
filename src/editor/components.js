@@ -38,6 +38,12 @@ Crafty.c("KernelPanicEditor", {
 		this.textInput = Crafty.e("Canvas, Text")
 			.textColor("#FFFFFF")
 			.textFont({family: "Ariel", size: "24px"})
+			.bind("EnterFrame", function(e) {
+				this.attr({
+					x: 50-Crafty.viewport.x,
+					y: 50-Crafty.viewport.y
+				});
+			})
 			.bind("KeyDown", function(e) {
 				var label = editor.label;
 				var keyStrings = editor.keyStrings;
@@ -228,6 +234,7 @@ Crafty.c("ScreenMouseCatcher", {
 					.enableDrawing()
 					.snap();
 				
+				console.log("new node");
 				editor.nodes.push(node);
 				e.cancelBubble = true;
 				
