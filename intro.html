@@ -1,13 +1,32 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<link rel="stylesheet" type="text/css" href="assets/css/ui.css">
+	<script type="text/javascript" src="src/ui.js"></script>
     <body>
-    	<div>
-    		<h1 class="testUI">53-609: Game Design</h1>
-			<h1 class="testUI">Frontier of Freedom Prototype</h1>
-			<h1 class="testUI">KERNEL PANIC</h1>
+    	<div class="popup">
+    		<p class="popup">
+    			53-609: Game Design, Frontier of Freedom
+    		</p>
+    		
+    		<img src="assets/images/kernel_panic.png" height="75%">
 			
-			<h1 class="testUI"><em>---press SPACE to start playing--</em></h1>
-			<img src="assets/images/kernel_panic.png">	
+			<div>
+				<p class="popup">
+    				Press SPACE to start
+    			</p>
+    		
+				<!--button type="button" onclick="uiButton.onClickStart()">
+					<span>Start</span>
+				</button>
+				<button type="button" onclick="uiButton.onClickSettings()">
+					<span>Settings</span>
+				</button-->	
+			</div>
+		</div>
+		
+		<div id="toConsoleData">
+			<p class="console">
+				Welcome to KERNEL PANIC, the Frontier of Freedom game entirely developed by Kellie Medlin.
+			</p>
 		</div>
     </body>
 </html>

@@ -106,10 +106,21 @@ Crafty.c('Exec', {
 		// get rid of the old player.
 		var exec = this;
 		var oldPlayer = graph.gamegraph_getCurrentPlayer();
-		var newPlayer = KernelPanic.currentLevel.gamelevel_createPlayer(graph);
 		
-		graph.gamegraph_removePlayer(oldPlayer);
-		newPlayer.enableDrawing();
+		var player = Crafty.e("GamePlayer").multi_disableControl();
+		var start = graph.graph_labelSet("start");
+		var hud = Crafty.e("GameHud").centerOn(player.centerX(), player.centerY());
+			
+		player.gameplayer_setGraph(graph);
+		player.gameplayer_setHud(hud);
+		graph.gamegraph_replacePlayer(oldPlayer, player);
+
+		player.gameplayer_putOnPoint(start.x1, start.y1);
+		player.gameplayer_lastGraphY = 0;	
+		player.startData = { hitX: start.x1, hitY: start.y1 };	
+		player.startState = R.States.chooseDirection;
+		
+		player.enableDrawing();
 		graph.attach(oldPlayer);
 		
 		// Communicate our behavior to the current level to scroll back to y = 0!
@@ -132,7 +143,7 @@ Crafty.c('Exec', {
 			oldPlayer.destroy();
 			
 			// Activate our new player
-			newPlayer.enableMachine();
+			player.enableMachine();
 			graph.transitionTo(R.States.normal);
 		};
 		

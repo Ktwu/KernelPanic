@@ -118,6 +118,13 @@ Crafty.c("GameGraph", {
 		return this.gamegraph_gameplayers[this.currentPlayerI];
 	},
 	
+	gamegraph_replacePlayer: function(oldPlayer, newPlayer) {
+		var index = this.gamegraph_gameplayers.indexOf(oldPlayer);
+		this.gamegraph_gameplayers[index] = newPlayer;
+		this.attach(newPlayer);
+		this.detach(oldPlayer);
+	},
+	
 	gamegraph_addPlayer: function(player) {
 		if (!player)
 			return;
@@ -156,7 +163,7 @@ Crafty.c("GameGraph", {
 		}
 		players.length = 0;
 		players.push(player);
-		currentPlayerI = 0;
+		this.currentPlayerI = 0;
 		player.gameplayer_reset();
 		this.gamegraph_setNewPlayer(0);
 		
@@ -203,8 +210,6 @@ Crafty.c("GameGraph", {
 			y2: graph.start.y2 * scaleY
 		};
 		this.graph_addLabel("start", start);
-		
-		console.log(graph.centerX);
 		this.graph_addLabel("centerX", graph.centerX);
 
 		var syscalls = graph.syscalls;

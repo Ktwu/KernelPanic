@@ -188,12 +188,18 @@ Crafty.c("GameLevel", {
 	gamelevel_toNextGraph: function(i, beSafe) {
 		var secondIndex = this.currentI + 1;
 		
-		if (beSafe)
-			secondIndex %= this.objDataToLoad.length;
-			
+		while (!KernelPanic.settings.isTutorialActive
+			&& typeof this.objDataToLoad[secondIndex % this.objDataToLoad.length] == "string"
+			&& i === undefined)
+			++secondIndex;
+					
 		i = (i === undefined) ? secondIndex : i;
+		if (beSafe)
+			i %= this.objDataToLoad.length;
+			
 		if (this.objDataToLoad.length > 1) {
-			this.transitionTo(R.States.graphChange, secondIndex);
+			console.log(i + " " + secondIndex);
+			this.transitionTo(R.States.graphChange, i);
 			return true;
 		}
 		return false;
@@ -231,16 +237,13 @@ Crafty.c("GameLevel", {
 	
 	_gamelevel_onLose: function() {
 		uiConsole.addLine("LOSER, try again");
-		Crafty.assets[R.UI.console] = KernelPanic.UI.innerHTML;
-		
+		Crafty.assets[R.UI.console] = KernelPanic.UI.innerHTML;	
 		this.currentObj.gamegraph_reset();
 	},
 	
 	_gamelevel_onWin: function() {
 		uiConsole.addLine("You win!");
-		Crafty.assets[R.UI.console] = KernelPanic.UI.innerHTML;
-
-		this._gamelevel_destroy();
-		Crafty.scene(R.Scene.prototype_intro);
+		KernelPanic.settings.isTutorialActive = false;
+		this.gamelevel_toNextGraph(0, true);		
 	}
 });

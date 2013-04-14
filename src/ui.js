@@ -23,3 +23,13 @@ var uiConsole = {
 		console.log("Added " + newText);
 	}
 };
+
+var uiButton = {
+	onClickStart: function() {
+		Crafty.scene(R.Scene.game);
+	},
+	
+	onClickSettings: function() {
+		console.log("Settings don't exist yet :(");
+	}
+};

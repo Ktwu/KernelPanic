@@ -3,6 +3,7 @@ var KernelPanic = {
 	currentLevel: null,
 	UI: null,
 	settings: {
+		isTutorialActive: true,
 		scaleX: 1,
 		scaleY: 1,
 		
