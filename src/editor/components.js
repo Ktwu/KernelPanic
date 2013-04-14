@@ -126,7 +126,6 @@ Crafty.c("KernelPanicEditor", {
 		json.vertexBase[0] = Math.min(json.vertexBase[0], node.x);
 		json.vertexBase[1] = Math.min(json.vertexBase[1], node.y);
 		
-		
 		var labels = node.nodeLabel._text.split(',');
 		var label = labels[0];
 		
@@ -146,11 +145,11 @@ Crafty.c("KernelPanicEditor", {
 		
 		// Check for mutex
 		if (label == "MUTEX") {
-			if (!json.mutexes[mutexInfo[1]])
-				json.mutexes[mutexInfo[1]] = { locks: [], keys: [] };
-			var mutex = json.mutexes[mutexInfo[1]];
+			if (!json.mutexes[labels[1]])
+				json.mutexes[labels[1]] = { locks: [], keys: [] };
+			var mutex = json.mutexes[labels[1]];
 			
-			if (mutexInfo[2] == "LOCK")
+			if (labels[2] == "LOCK")
 				mutex.locks.push([node.x, node.y]);
 			else
 				mutex.keys.push([node.x, node.y]);
@@ -180,7 +179,6 @@ Crafty.c("KernelPanicEditor", {
 			var node = this.nodes[i];	
 				
 			this.jsonProcessLabel(node, json);
-			json.vertexBase[1] = Math.min(json.vertexBase[1], node.y);
 			
 			list[i].push([node.x, node.y]);
 			var otherNodes = node.otherNodes;
@@ -190,9 +188,7 @@ Crafty.c("KernelPanicEditor", {
 			} 
 		}
 		
-		// Give our graph a little bit of offset
-		json.vertexBase[1] *= -1;
-		
+		json.vertexBase[1] = 0;
 		return json;
 	}
 });

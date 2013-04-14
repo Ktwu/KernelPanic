@@ -282,17 +282,18 @@ Crafty.c("GameGraph", {
 	_gamegraph_sliderHit: function(data) {	
 		// Only add the edge to our traveled list if the player actually traveled the edge
 		var player = this.gamegraph_getCurrentPlayer();
-		if (player.slideTarget.x == data.x && player.slideTarget.y == data.y) {
-			 if (this.gamegraph_travelgraph.graphdraw_tryAddEdge(
+		var shouldAddLine = player.slideTarget.x == data.x && player.slideTarget.y == data.y
+		for (var i in this.gamegraph_mutexes) {
+			shouldAddLine &= this.gamegraph_mutexes[i]._mutex_onSliderHit(player);
+		}
+		
+		if (shouldAddLine) {
+			if (this.gamegraph_travelgraph.graphdraw_tryAddEdge(
 				new Crafty.math.Vector2D(data.x, data.y),
 				new Crafty.math.Vector2D(data.otherX, data.otherY))) {
 				++this.gamegraph_numTraversedEdges;
-				uiConsole.addLine(this.gamegraph_numTraversedEdges + " vs " + this.gamegraph_numEdges);
+				uiConsole.addLine(this.gamegraph_numTraversedEdges + "/" + this.gamegraph_numEdges + " edges explored");	
 			}
-		}
-		
-		for (var i in this.gamegraph_mutexes) {
-			this.gamegraph_mutexes[i].trigger(R.Event.sliderHit, this.gamegraph_getCurrentPlayer());
 		}
 	},
 

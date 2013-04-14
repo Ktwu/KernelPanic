@@ -14,6 +14,9 @@ Crafty.c("GamePlayer", {
 	lastHitX: 0,
 	lastHitY: 0,
 	
+	moveKey1: null,
+	moveKey2: null,
+	
 	_enabledFill: "#FFFFFF",
 	_disabledFill: "#888888",
 	
@@ -42,11 +45,15 @@ Crafty.c("GamePlayer", {
 		delete this.inMutexUnlockZone;
 	},
 	
-	_gameplayer_register: function() {
-		this.onRegister[R.States.move] = function(state, data) {
+	_gameplayer_register: function(oldState) {
+		this.onRegister[R.States.move] = function(state, repressMessage) {
 			this.bind(R.Event.sliderHit, this._gameplayer_sliderHit)
 			.bind(R.Event.Moved, this._gameplayer_moved);
 			this.multi_enableControl();
+			
+			if (!repressMessage && this.moveKey1 && this.moveKey2) {
+				uiConsole.addLine("Move with " + this.moveKey1 + " and " + this.moveKey2);
+			}
 		};
 		this.onUnregister[R.States.move] = function(state, data) {
 			this.multi_disableControl();
@@ -168,8 +175,10 @@ Crafty.c("GamePlayer", {
 			var start = this.gameplayer_hud.gamehud_startVertex;
 
 			// Put on line, set keys for movement
-			this.gameplayer_putOnLine(start.x, start.y, this.gameplayer_hud.gamehud_oppositeKey(key),
-				end.x, end.y, key);
+			this.moveKey1 = key;
+			this.moveKey2 = this.gameplayer_hud.gamehud_oppositeKey(key);
+			
+			this.gameplayer_putOnLine(start.x, start.y, this.moveKey2, end.x, end.y, this.moveKey1);
 			this.transitionTo(R.States.move);
 		} else if (this.activeSyscall && key == this.gameplayer_hud.gamehud_syscallKey) {
 			this.activeSyscall.trigger(R.Event.syscallActivate, this.gameplayer_graph);

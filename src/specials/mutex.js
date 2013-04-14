@@ -5,7 +5,6 @@ Crafty.c("Mutex", {
 	init: function() {
 		this.bind("Remove", this._mutex_onRemove).requires("2D, CustomDraw")
 		.bind(R.Event.playerMovement, this._mutex_onPlayerMovement)
-		.bind(R.Event.sliderHit, this._mutex_onSliderHit)
 		.attr({
 			x: 0,
 			y: 0,
@@ -120,7 +119,8 @@ Crafty.c("Mutex", {
 			// mutex center.
 			player.hasMutexPass = false;
 			player.multi_undoMove();
-			player.transitionTo(R.States.move)
+			player.transitionTo(R.States.move, true);
+			return false;
 		}
 		
 		if (player.inMutexUnlockZone == this) {
@@ -136,6 +136,7 @@ Crafty.c("Mutex", {
 			// about in the unlocked zone.
 			player.hasMutexPass = true;
 		}
+		return true;
 	},
 	
 	_mutex_draw: function(data) {

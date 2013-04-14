@@ -767,12 +767,18 @@ Crafty.c('GraphDraw', {
 		// We don't support drawing to the DOM, sadly
 		if (data.type == 'DOM')
 			return;
-		
+
 		// For now, naively draw all of our strokes
 		var strokes = this._graphdraw_adjacencyList;
 		var ctx = data.ctx;
 		var pos = data.pos;
-	    
+	    	
+		/*ctx.save();
+		ctx.globalAlpha = 0.5;
+		ctx.fillStyle = "#FF0000";
+		ctx.fillRect(data.pos._x, data.pos._y, data.pos._w, data.pos._h);
+		ctx.restore();*/
+		
 	    ctx.save();
 	    ctx.globalAlpha = this.alpha;
 		ctx.strokeStyle = this.strokeStyle;

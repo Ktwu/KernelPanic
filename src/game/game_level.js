@@ -221,7 +221,9 @@ Crafty.c("GameLevel", {
 			});
 	
 			var player = this.currentObj.gamegraph_getCurrentPlayer();			
-			if (player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
+			if (player == null || player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
+				if (player == null)
+					console.log("Why was the player null???");
 				this.trigger(R.Event.Lose);
 			}
 		}
