@@ -25,7 +25,13 @@ var KernelPanic = {
 
 // A store for unchanging variables for reference throughout the game
 // Similar to Android"s reference files
-var R = {	
+var R = {
+	Images: {
+		fork:				"assets/images/fork.png",
+		exec:				"assets/images/exec.png",
+		vanish:				"assets/images/vanish.png"
+	},
+		
 	UI: {
 		intro:				"intro.html",  
 		prototype_intro: 	"prototype_intro.html",
@@ -110,7 +116,7 @@ var R = {
 	UiConsoleMessages: {
 		FORK:   "Activated FORK syscall.  A new player has been made for you to control.",
 		EXEC:   "Activated EXEC syscall.  You've been reset to the program's start.",
-		VANISH: "Activated VANISH syscall.  Congratulations, your program has terminated.",
+		VANISH: "program terminated",
 		MUTEX_HIT_UNLOCK: "Unlocking mutex (O).  Entering critical area...",
 		MUTEX_HIT_LOCK:   "The mutex is locked (X).  You will have to release it first."
 	}

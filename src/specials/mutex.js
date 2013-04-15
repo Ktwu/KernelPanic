@@ -111,7 +111,6 @@ Crafty.c("Mutex", {
 	_mutex_onSliderHit: function(player) {
 		if (player.inMutexLockZone == this) {
 			if (!player.isMutexMessageDisabled) {
-				uiConsole.addLine(R.UiConsoleMessages.MUTEX_HIT_LOCK);
 				player.isMutexMessageDisabled = true;
 			}
 			
@@ -119,13 +118,12 @@ Crafty.c("Mutex", {
 			// mutex center.
 			player.hasMutexPass = false;
 			player.multi_undoMove();
+			player.gameplayer_resetHud();
 			player.transitionTo(R.States.move, true);
 			return false;
 		}
 		
-		if (player.inMutexUnlockZone == this) {
-			uiConsole.addLine(R.UiConsoleMessages.MUTEX_HIT_UNLOCK);
-			
+		if (player.inMutexUnlockZone == this) {			
 			// Oh cool, now we get to swap stuff.  Awesome.
 			// If the player was 
 			var temp = this.unlockedGroup;

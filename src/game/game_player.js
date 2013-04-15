@@ -16,6 +16,8 @@ Crafty.c("GamePlayer", {
 	
 	moveKey1: null,
 	moveKey2: null,
+	moveAngle1: 0,
+	moveAngle2: 0,
 	
 	_enabledFill: "#FFFFFF",
 	_disabledFill: "#888888",
@@ -54,8 +56,13 @@ Crafty.c("GamePlayer", {
 			if (this.moveKey1 && this.moveKey2) {
 				uiConsole.setMoveLine("Move with " + this.moveKey1 + " and " + this.moveKey2);
 			}
+			
+			// show our player's direction to move in
+			this.gameplayer_hud.visible = true;
 		};
 		this.onUnregister[R.States.move] = function(state, data) {
+			this.gameplayer_hud.visible = false;
+			this.multi_stop();
 			this.multi_disableControl();
 			this.unbind(R.Event.sliderHit, this._gameplayer_sliderHit)
 			.unbind(R.Event.Moved, this._gameplayer_moved);
@@ -166,19 +173,34 @@ Crafty.c("GamePlayer", {
 	},
 	
 	_gameplayer_moved: function() {
-		this.gameplayer_graph.trigger(R.Event.playerMovement);
+		if (this.currentState == R.States.move) {
+			console.log("moved");
+			this.gameplayer_hud.visible = false;
+			this.gameplayer_graph.trigger(R.Event.playerMovement);
+		}
+	},
+	
+	gameplayer_resetHud: function() {
+		var hud = this.gameplayer_hud;
+		hud.gamehud_clear();
+		hud.gamehud_keyMap[this.moveKey1] = {direction: this.moveAngle1};
+		hud.gamehud_keyMap[this.moveKey2] = {direction: this.moveAngle2};
 	},
 	
 	_gameplayer_onHudChoice: function(e) {
 		var key = R.CodeToKey[e.key];
 		
 		if (this.gameplayer_hud.gamehud_keyMap[key]) {
-			var end = this.gameplayer_hud.gamehud_keyMap[key].vertex;
-			var start = this.gameplayer_hud.gamehud_startVertex;
-
+			var hud = this.gameplayer_hud;
+			var end = hud.gamehud_keyMap[key].vertex;
+			var start = hud.gamehud_startVertex;
+			
 			// Put on line, set keys for movement
 			this.moveKey1 = key;
-			this.moveKey2 = this.gameplayer_hud.gamehud_oppositeKey(key);
+			this.moveAngle1 = hud.gamehud_keyMap[key].direction;
+			this.moveKey2 = hud.gamehud_oppositeKey(key);
+			this.moveAngle2 = this.moveAngle1.clone().negate();
+			this.gameplayer_resetHud();
 			
 			this.gameplayer_putOnLine(start.x, start.y, this.moveKey2, end.x, end.y, this.moveKey1);
 			this.transitionTo(R.States.move);

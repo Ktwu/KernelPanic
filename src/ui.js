@@ -1,12 +1,14 @@
 var ui = {
 	setInputKeys: function() {
-		var tempElement = document.getElementById("activateSyscallKey");
-		if (tempElement)
-    		tempElement.innerHTML = KernelPanic.settings.activateSyscallKey;
+		var tempElements = document.getElementsByClassName("activateSyscallKey");
+		if (tempElements)
+			for (var i = 0; i < tempElements.length; ++i)
+    			tempElements[i].innerHTML = KernelPanic.settings.activateSyscallKey;
     	
-    	tempElement = document.getElementById("contextSwitchKey");
-    	if (tempElement)
-    		tempElement.innerHTML = KernelPanic.settings.contextSwitchKey;
+    	tempElements = document.getElementsByClassName("contextSwitchKey");
+    	if (tempElements)
+    		for (var i = 0; i < tempElements.length; ++i)
+    			tempElements[i].innerHTML = KernelPanic.settings.contextSwitchKey;
 	}
 }
 

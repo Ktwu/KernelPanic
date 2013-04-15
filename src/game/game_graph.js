@@ -169,6 +169,8 @@ Crafty.c("GameGraph", {
 		
 		this.gamegraph_numTraversedEdges = 0;
 		
+		uiConsole.setEdgeLine("no edges");
+		
 		return this;
 	},
 		
@@ -302,13 +304,13 @@ Crafty.c("GameGraph", {
 				var fractionOfEdges = this.gamegraph_numTraversedEdges / this.gamegraph_numEdges;
 				if (fractionOfEdges == 1)
 					edgeOutput += ("A+, graph completed!");
-				else if (fractionOfEdges >= .9)
-					edgeOutput += ("A, almost done");
 				else if (fractionOfEdges >= .8)
-					edgeOutput += ("B, solid performance");
-				else if (fractionOfEdges >= .7)
-					edgeOutput += ("C, could be better");
+					edgeOutput += ("A, almost done");
 				else if (fractionOfEdges >= .6)
+					edgeOutput += ("B, solid performance");
+				else if (fractionOfEdges >= .4)
+					edgeOutput += ("C, could be better");
+				else if (fractionOfEdges >= .2)
 					edgeOutput += ("D, explore more edges");
 				else
 					edgeOutput += "F, barely started"	

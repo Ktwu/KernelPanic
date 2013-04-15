@@ -3,6 +3,7 @@ Crafty.c('Syscall', {
 	blinkStyle: null,
 	steadyStyle: null,
 	syscallId: -1,
+	image: null,
 	
 	_percent: 0,
 
@@ -19,6 +20,7 @@ Crafty.c('Syscall', {
 		});
 		
 		this.drawFunctions.push(this._syscall_changeGradient);
+		this.drawFunctions.push(this._syscall_drawImage);
 		
 		this.onRegister[this.DISABLED_STATE] = function() {
 			this.unbind(R.Event.playerMovement, this._syscall_checkForCollision);
@@ -82,6 +84,12 @@ Crafty.c('Syscall', {
 		} else {
 			this.fillStyle = this.steadyStyle;
 		}
+	},
+	
+	_syscall_drawImage: function(data) {
+		var ctx = data.ctx;
+		if (this.image)
+			ctx.drawImage(this.image, data.pos._x, data.pos._y, data.pos._w, data.pos._h);
 	}
 });
 
@@ -89,14 +97,13 @@ Crafty.c('Exec', {
 	init: function() {
 		this.requires('Syscall')
 		.attr({
-			syscallName: 'Exec'
+			syscallName: 'Exec',
+			image: Crafty.assets[R.Images.exec]
 		})
 		.bind(R.Event.syscallActivate, this._exec_activate);
 	},
 	
-	_exec_activate: function(graph) {
-		uiConsole.addLine(R.UiConsoleMessages.EXEC);
-			
+	_exec_activate: function(graph) {	
 		// Graph, we don't want any input from you.  Shut up for a bit.
 		graph.transitionTo(R.States.active);
 		graph.gamegraph_getCurrentPlayer().activeSyscall = null;
@@ -157,13 +164,13 @@ Crafty.c('Fork', {
 		this.requires('Syscall')
 		.attr({
 			steadyStyle: "#FF0000",
-			syscallName: 'Fork'
+			syscallName: 'Fork',
+			image: Crafty.assets[R.Images.fork]
 		})
 		.bind(R.Event.syscallActivate, this._fork_activate);
 	},
 	
 	_fork_activate: function(graph) {
-		uiConsole.addLine(R.UiConsoleMessages.FORK);
 		this.transitionTo(R.States.dead);
 		
 		var player = graph.gamegraph_getCurrentPlayer();
@@ -182,7 +189,8 @@ Crafty.c('Vanish', {
 		this.requires('Syscall')
 		.attr({
 			steadyStyle: "#FF00FF",
-			syscallName: 'Vanish'
+			syscallName: 'Vanish',
+			image: Crafty.assets[R.Images.vanish]
 		})
 		.bind(R.Event.syscallActivate, this._vanish_activate);
 	},
@@ -190,7 +198,7 @@ Crafty.c('Vanish', {
 	// The Vanish mechanic causes everything to fade from view, which means playing with alphas.
 	// Afterwards we swap to another graph and destroy the one that vanished.
 	_vanish_activate: function(graph) {	
-		uiConsole.addLine(R.UiConsoleMessages.VANISH);
+		//uiConsole.addLine(R.UiConsoleMessages.VANISH);
 		
 		// Graph, we don't want any input from you
 		graph.transitionTo(R.States.active);

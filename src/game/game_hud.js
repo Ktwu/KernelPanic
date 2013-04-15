@@ -200,6 +200,7 @@ Crafty.c("GameHud", {
 		ctx.font = "bold 12px sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
+		
 		for (var key in this.gamehud_keyMap) {
 			ctx.fillText(key, 
 				(this.gamehud_displacement * this.gamehud_keyMap[key].direction.x + this.centerX()),

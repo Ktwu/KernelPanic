@@ -386,6 +386,11 @@ Crafty.c("MultiInput", {
 		this._keys = {};
 	},
 	
+	multi_stop: function() {
+		this._activeMap = {};
+		this._cooloffMap = {};
+	},
+	
 	multi_add: function (keys, speed, speedReleaseFunc) {
 		var isNum = !isNaN(speed);
 		var speedNum = isNum ? speed : 0;
