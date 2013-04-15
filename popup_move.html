@@ -1,6 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<link rel="stylesheet" type="text/css" href="assets/css/ui.css">
-    <body>
+	<script type="text/javascript" src="src/references.js"></script>
+	<script type="text/javascript" src="src/ui.js"></script>
+	
+    <body onload="ui.setInputKeys()">
     	<div class="popup">
 			<p class="popup">
 				Welcome to KERNEL PANIC
@@ -15,7 +18,7 @@
 		
 		<div id="toConsoleData">
 			<p class="console">
-				Move with the QWEDCXZA keys, active syscalls with SPACE
+				Move with the QWEDCXZA keys, active syscalls with <span id="activateSyscallKey">derp</span>
 				
 				<br>
 				<br>-------------
@@ -31,7 +34,6 @@
 				<br>| z | x | c |
 				<br>| &nbsp; | &nbsp; | &nbsp; |
 				<br>-------------
-				<br><br>________________________
 			</p>
 		</div>
     </body>

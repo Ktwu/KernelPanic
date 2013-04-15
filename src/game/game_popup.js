@@ -11,6 +11,8 @@ Crafty.c("GamePopup", {
 		
 		this.onRegister[R.States.normal] = function() {
 			this.bind(R.Event.KeyUp, this._popup_onKeyUp);
+			uiConsole.setMoveLine("SPACE to continue");
+			uiConsole.setEdgeLine("no edges");
 		}
 		this.onUnregister[R.States.normal] = function() {
 			this.unbind(R.Event.KeyUp, this._popup_onKeyUp);
@@ -21,6 +23,7 @@ Crafty.c("GamePopup", {
 	
 	popup_load: function(objData) {
 		this.replace(objData);
+		ui.setInputKeys();
 		return this;
 	},
 	

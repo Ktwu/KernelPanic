@@ -49,7 +49,7 @@ var Tools = {
 			}
 			
 			localDiff = Math.abs(value - values[i]);
-			if (localDiff < diff) {
+			if (localDiff <= diff) {
 				diff = localDiff;
 				returnData.value = values[i];
 				returnData.i = i;

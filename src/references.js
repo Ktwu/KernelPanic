@@ -7,6 +7,15 @@ var KernelPanic = {
 		scaleX: 1,
 		scaleY: 1,
 		
+		keyList: ["D", "C", "X", "Z", "A", "Q", "W", "E"],
+		angleList: [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4],
+
+		//keyList: ["D", "S", "A", "W"],
+		//angleList: [0, Math.PI/2, Math.PI, 3*Math.PI/2],
+		
+		contextSwitchKey: "K",
+		activateSyscallKey: "SPACE",
+				
 		getGraphCenterOnX: function() {
 			// Graphs appears such that their center point is 2/3rds of the screen width
 			return Crafty.canvas._canvas.width * 2/3;

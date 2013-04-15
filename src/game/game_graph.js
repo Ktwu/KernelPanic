@@ -297,7 +297,22 @@ Crafty.c("GameGraph", {
 				new Crafty.math.Vector2D(data.x, data.y),
 				new Crafty.math.Vector2D(data.otherX, data.otherY))) {
 				++this.gamegraph_numTraversedEdges;
-				uiConsole.addLine(this.gamegraph_numTraversedEdges + "/" + this.gamegraph_numEdges + " edges explored");	
+				
+				var edgeOutput = this.gamegraph_numTraversedEdges + "/" + this.gamegraph_numEdges + " edges explored<br><br>$ ";
+				var fractionOfEdges = this.gamegraph_numTraversedEdges / this.gamegraph_numEdges;
+				if (fractionOfEdges == 1)
+					edgeOutput += ("A+, graph completed!");
+				else if (fractionOfEdges >= .9)
+					edgeOutput += ("A, almost done");
+				else if (fractionOfEdges >= .8)
+					edgeOutput += ("B, solid performance");
+				else if (fractionOfEdges >= .7)
+					edgeOutput += ("C, could be better");
+				else if (fractionOfEdges >= .6)
+					edgeOutput += ("D, explore more edges");
+				else
+					edgeOutput += "F, barely started"	
+				uiConsole.setEdgeLine(edgeOutput);	
 			}
 		}
 	},

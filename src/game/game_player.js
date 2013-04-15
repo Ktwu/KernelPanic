@@ -51,8 +51,8 @@ Crafty.c("GamePlayer", {
 			.bind(R.Event.Moved, this._gameplayer_moved);
 			this.multi_enableControl();
 			
-			if (!repressMessage && this.moveKey1 && this.moveKey2) {
-				uiConsole.addLine("Move with " + this.moveKey1 + " and " + this.moveKey2);
+			if (this.moveKey1 && this.moveKey2) {
+				uiConsole.setMoveLine("Move with " + this.moveKey1 + " and " + this.moveKey2);
 			}
 		};
 		this.onUnregister[R.States.move] = function(state, data) {
@@ -64,6 +64,8 @@ Crafty.c("GamePlayer", {
 		this.onRegister[R.States.chooseDirection] = function(state, data) {
 			var hud = this.gameplayer_hud;
 			hud.visible = true;
+			
+			uiConsole.setMoveLine("Waiting for choice...");
 			
 			if (data) {
 				D.vector.x = data.hitX;

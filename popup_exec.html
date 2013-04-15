@@ -1,11 +1,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<link rel="stylesheet" type="text/css" href="assets/css/ui.css">
-    <body>
+	<script type="text/javascript" src="src/references.js"></script>
+	<script type="text/javascript" src="src/ui.js"></script>
+	
+    <body onload="ui.setInputKeys()">
     	<div class="popup">
 			<p class="popup">
 				NEW SYSCALL 
 				
-				<br><br>EXEC will teleport you to the top of the level.  Activate with SPACE.
+				<br><br>EXEC will teleport you to the top of the level.  Activate with <span id="activateSyscallKey">derp</span>.
 			</p>
 			<p class="popup">
 				Press SPACE to continue
@@ -14,13 +17,7 @@
 		
 		<div id="toConsoleData">
 			<p class="console">
-				________________________
-				<br><br>
-				
 				New Syscall: EXEC
-				
-				<br>
-				________________________
 			</p>
 		</div>
     </body>

@@ -207,7 +207,7 @@ Crafty.c("GameLevel", {
 	
 	_gamelevel_keydown: function(e) {
 		var key = R.CodeToKey[e.key];
-		if (key == "S" && this.currentState == R.States.normal) {
+		if (key == KernelPanic.settings.contextSwitchKey && this.currentState == R.States.normal) {
 			// Should we transition between players instead?
 			// If not, tell the graph which player to set for next time, then
 			// switch to a new graph instead.

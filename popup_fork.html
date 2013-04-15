@@ -1,27 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<link rel="stylesheet" type="text/css" href="assets/css/ui.css">
-    <body>
+	<script type="text/javascript" src="src/references.js"></script>
+	<script type="text/javascript" src="src/ui.js"></script>
+	
+    <body onload="ui.setInputKeys()">
     	<div class="popup">
-			<p class="popup">
+			<p id="popupText" class="popup">
 				NEW SYSCALL 
 				
-				<br><br>FORK will create a new player for you at the top of the graph.  Activate with SPACE.
-				Toggle between your players with S.
+				<br><br>FORK will create a new player for you at the top of the graph.  Activate with
+				  <span id="activateSyscallKey">derp</span>.
+				Toggle between your players with <span id="contextSwitchKey">herp</span>.
 			</p>
-			<p class="popup">
+			<p id="continuePopup" class="popup">
 				Press SPACE to continue
 			</p>
 		</div>
 		
 		<div id="toConsoleData">
 			<p class="console">
-				________________________
-				<br><br>
-				
 				New Syscall: FORK
-				
-				<br>
-				________________________
 			</p>
 		</div>
     </body>

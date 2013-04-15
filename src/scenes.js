@@ -51,14 +51,6 @@ Crafty.scene(R.Scene.game, function() {
 
 Crafty.scene(R.Scene.intro, function() {
 	KernelPanic.UI.innerHTML = Crafty.assets[R.UI.intro];
-	
-	/*var fun = function(e) {
-		if (e.key == Crafty.keys.SPACE) {
-			this.unbind('KeyDown', fun);
-			Crafty.scene(R.Scene.game);
-		}
-	};
-	this.bind('KeyDown', fun);*/
 });
 
 Crafty.scene(R.Scene.prototype_intro, function() {
