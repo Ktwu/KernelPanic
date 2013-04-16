@@ -81,6 +81,7 @@ Crafty.c("GamePlayer", {
 				this.lastHitY = data.hitY;
 				data.edgeSet = this.gameplayer_graph.graph_edgeSet(D.vector);
 
+				console.log("loading data");
 				hud.gamehud_clear();	
 				hud.gamehud_load(data);
 			}
@@ -140,11 +141,28 @@ Crafty.c("GamePlayer", {
 
 		this.centerOn(x1,y1)
 		.slide_anchor(0)
-		.slide_setSpeedFunctions(this._gameplayer_speed, this._gameplayer_releaseSpeed)
+		.slide_setSpeedFunctions(this._gameplayer_speed, this._gameplayer_releaseSpeed, this._gameplayer_onOtherKeyPressed)
 		.slide_applySettings();
 	},
 	
 	_gameplayer_speed: function(time, speed, contributedSpeed, sharedData) {
+		sharedData.lastSpeed = (sharedData.lastSpeed) ? Math.min(sharedData.lastSpeed + KernelPanic.settings.playerAcceleration, KernelPanic.settings.maxSpeed) : 0.5;
+		return sharedData.lastSpeed;
+	},
+	
+	_gameplayer_releaseSpeed: function(time, speed, contributedSpeed, sharedData) {
+		sharedData.time += time;
+		sharedData.lastSpeed = sharedData.lastSpeed && sharedData.lastSpeed >= 0.1
+			? Math.min(sharedData.lastSpeed + KernelPanic.settings.playerAcceleration, KernelPanic.settings.maxSpeed)
+			: NaN;
+		return sharedData.lastSpeed;	
+	},
+	
+	_gameplayer_onOtherKeyPressed: function(key, sharedData) {
+		sharedData.lastSpeed = 0;	
+	},
+	
+	/*_gameplayer_speed: function(time, speed, contributedSpeed, sharedData) {
 		var startSpeed = sharedData.lastReleaseSpeed ? sharedData.lastReleaseSpeed : 0;
 		return Math.min(time/50 + startSpeed, 10);
 	},
@@ -155,7 +173,7 @@ Crafty.c("GamePlayer", {
 		speed = contributedSpeed < 0.1 ? NaN : contributedSpeed;
 		sharedData.lastReleaseSpeed = speed ? speed : 0;
 		return speed;	
-	},
+	},*/
 	
 	_gameplayer_sliderHit: function(data) {
 		var graph = this.gameplayer_graph;
@@ -174,7 +192,6 @@ Crafty.c("GamePlayer", {
 	
 	_gameplayer_moved: function() {
 		if (this.currentState == R.States.move) {
-			console.log("moved");
 			this.gameplayer_hud.visible = false;
 			this.gameplayer_graph.trigger(R.Event.playerMovement);
 		}

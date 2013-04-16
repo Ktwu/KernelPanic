@@ -33,25 +33,25 @@ var uiConsole = {
 	addHTML: function(newText) {
 		uiConsole.console.innerHTML += newText;
 		uiConsole.scrollToBottom();
-		console.log("Added " + newText);	
+		//console.log("Added " + newText);	
 	},
 	
 	addLine: function(newText) {
 		uiConsole.console.innerHTML += "<p class='console'>$ " + newText + "</p>";
 		uiConsole.scrollToBottom();
-		console.log("Added " + newText);
+		//console.log("Added " + newText);
 	},
 	
 	setMoveLine: function(newText) {
 		uiConsole.moveConsole.innerHTML = "$ " + newText;
 		uiConsole.scrollToBottom();
-		console.log("Added " + newText);
+		//console.log("Added " + newText);
 	},
 	
 	setEdgeLine: function(newText) {
 		uiConsole.edgeConsole.innerHTML = "$ " + newText;
 		uiConsole.scrollToBottom();
-		console.log("Added " + newText);
+		//console.log("Added " + newText);
 	}
 };
 
@@ -61,6 +61,6 @@ var uiButton = {
 	},
 	
 	onClickSettings: function() {
-		console.log("Settings don't exist yet :(");
+		//console.log("Settings don't exist yet :(");
 	}
 };

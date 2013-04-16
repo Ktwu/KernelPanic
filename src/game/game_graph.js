@@ -146,15 +146,6 @@ Crafty.c("GameGraph", {
 			y: 0
 		});
 		
-		// Make all of our old syscalls alive again.
-		var syscalls = this.gamegraph_syscalls;
-		for (var i in syscalls)
-			syscalls[i].syscall_reset();
-			
-		var mutexes = this.gamegraph_mutexes;
-		for (var i = 0; i < mutexes.length; ++i)
-			mutexes[i].mutex_reset();
-
 		// Reset the player at the graph's beginning
 		var players = this.gamegraph_gameplayers;
 		var player = players[0];
@@ -164,10 +155,18 @@ Crafty.c("GameGraph", {
 		players.length = 0;
 		players.push(player);
 		this.currentPlayerI = 0;
-		player.gameplayer_reset();
 		this.gamegraph_setNewPlayer(0);
-		
+		player.gameplayer_reset();
 		this.gamegraph_numTraversedEdges = 0;
+		
+		// Make all of our old syscalls alive again.
+		var syscalls = this.gamegraph_syscalls;
+		for (var i in syscalls)
+			syscalls[i].syscall_reset();
+			
+		var mutexes = this.gamegraph_mutexes;
+		for (var i = 0; i < mutexes.length; ++i)
+			mutexes[i].mutex_reset();
 		
 		uiConsole.setEdgeLine("no edges");
 		

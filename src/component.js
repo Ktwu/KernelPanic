@@ -349,6 +349,7 @@ Crafty.c("MultiInput", {
 	_activeMap: null,
 	_cooloffMap: null,
 	_keys: null,
+	__allowedKeyMap: null,
 	_movement: null,
 	_previousMovement: null,
 	_multi_enabled: false,
@@ -363,6 +364,7 @@ Crafty.c("MultiInput", {
 	_multi_onRemove: function() {
 		delete this._activeMap;
 		delete this._cooloffMap;
+		delete this._allowedKeyMap;
 		delete this._keys;
 		delete this._movement;
 		delete this._previousMovement;
@@ -383,7 +385,8 @@ Crafty.c("MultiInput", {
 	multi_clear: function() {
 		this._activeMap = {};
 		this._cooloffMap = {};
-		this._keys = {};
+		this._allowedKeyMap = {};
+		this._keys = [];
 	},
 	
 	multi_stop: function() {
@@ -391,26 +394,33 @@ Crafty.c("MultiInput", {
 		this._cooloffMap = {};
 	},
 	
-	multi_add: function (keys, speed, speedReleaseFunc) {
+	multi_add: function (keys, angle, speed, speedReleaseFunc, otherKeyPressFunc) {
 		var isNum = !isNaN(speed);
 		var speedNum = isNum ? speed : 0;
 		var speedFunc = isNum ? null : speed;
+
+		var keyCodes = [];
+		for (var i = 0; i < keys.length; ++i) {
+			keyCodes.push(Crafty.keys[keys[i]]);
+			this._allowedKeyMap[keyCodes[i]] = true;
+		}
 		
-		for (var k in keys) {
-			var keyCode = Crafty.keys[k];
-			this._keys[keyCode] = {
-				speedNum: speedNum,
-				speedFunc: speedFunc,
-				speedReleaseFunc: speedReleaseFunc,
-				x: Math.round(Math.cos(keys[k] * (Math.PI / 180)) * 1000) / 1000,
-				y: Math.round(Math.sin(keys[k] * (Math.PI / 180)) * 1000) / 1000,
-				savedData: {},
-				lastSpeed: 0,
-				startTime: 0
-			};
+		this._keys.push({
+			keys: keyCodes,
+			speedNum: speedNum,
+			speedFunc: speedFunc,
+			speedReleaseFunc: speedReleaseFunc,
+			otherKeyPressFunc: otherKeyPressFunc,
+			x: Math.round(Math.cos(angle * (Math.PI / 180)) * 1000) / 1000,
+			y: Math.round(Math.sin(angle * (Math.PI / 180)) * 1000) / 1000,
+			savedData: {},
+			lastSpeed: 0,
+			startTime: 0,
+		});
 			
-			if (Crafty.keydown[keyCode]) {
-				this._multi_keydown({ key: keyCode });
+		for (var i = 0; i < keyCodes.length; ++i) {
+			if (Crafty.keydown[keyCodes[i]]) {
+				this._multi_keydown({ key: keyCodes[i] });
 			}
 		}
 		
@@ -438,44 +448,55 @@ Crafty.c("MultiInput", {
   	},
   	
  	_multi_keydown: function (e) {
-		var keyInfo = this._keys[e.key];
-		if (this._keys[e.key]) {
-			delete this._cooloffMap[e.key];
+ 		if (!this._allowedKeyMap[e.key])
+ 			return;
+ 			
+		for (var i = 0; i < this._keys.length; ++i) {
+			var keyInfo = this._keys[i];
+			if (keyInfo.keys.indexOf(e.key) >= 0) {
+				delete this._cooloffMap[i];
 			
-			// We want to process this input's speed function
-			// so add it to our active map.
-			this._activeMap[e.key] = keyInfo;
-			keyInfo.startTime = (new Date()).getTime();
-			this.trigger('NewDirection', {
-				x: keyInfo.x,
-				y: keyInfo.y
-			});
+				// We want to process this input's speed function
+				// so add it to our active map.
+				this._activeMap[i] = keyInfo;
+				keyInfo.startTime = (new Date()).getTime();
+				this.trigger('NewDirection', {
+					x: keyInfo.x,
+					y: keyInfo.y
+				});	
+			} else if (keyInfo.otherKeyPressFunc) {
+				console.log(e.key);
+				keyInfo.otherKeyPressFunc(e.key, keyInfo.savedData);
+			}
 		}
 	},
 
 	_multi_keyup: function (e) {
-		var keyInfo = this._keys[e.key];
-		if (this._keys[e.key]) {
-			delete this._activeMap[e.key];
+ 		if (!this._allowedKeyMap[e.key])
+ 			return;
+ 			
+		for (var i = 0; i < this._keys.length; ++i) {
+			var keyInfo = this._keys[i];
+			if (keyInfo.keys.indexOf(e.key) >= 0) {
+				delete this._activeMap[i];
 			
-			// When the key is released, we might want some lingering movement.
-			// Process this lingering movement after the key is released.
-			if (keyInfo.speedReleaseFunc) {
-				keyInfo.startTime = (new Date()).getTime();
-				this._cooloffMap[e.key] = keyInfo;
+				if (keyInfo.speedReleaseFunc) {
+					keyInfo.startTime = (new Date()).getTime();
+					this._cooloffMap[i] = keyInfo;
+				}
+				
+				this.trigger('NewDirection', {
+					x: -keyInfo.x,
+					y: -keyInfo.y
+				});	
 			}
-			
-			this.trigger('NewDirection', {
-				x: -keyInfo.x,
-				y: -keyInfo.y
-			});
 		}
 	},
 	
 	_multi_processActive: function () {
 		var keyInfo = null;
 		var tempVector
-		for (var key in this._activeMap) {
+		for (var key in this._activeMap) {		
 			keyInfo = this._activeMap[key];
 			keyInfo.lastSpeed = keyInfo.speedFunc == null ? 
 				keyInfo.speedNum : 
@@ -483,7 +504,7 @@ Crafty.c("MultiInput", {
 					(new Date()).getTime() - keyInfo.startTime,
 					keyInfo.lastSpeed,
 					this._previousMovement.dotProduct(keyInfo),
-					keyInfo.savedData);
+					keyInfo.savedData);	
 			this._movement.x += keyInfo.lastSpeed * keyInfo.x;
 			this._movement.y += keyInfo.lastSpeed * keyInfo.y;
 		}
@@ -499,7 +520,6 @@ Crafty.c("MultiInput", {
 				keyInfo.lastSpeed,
 				this._previousMovement.dotProduct(keyInfo),
 				keyInfo.savedData);
-			
 			if (isNaN(keyInfo.lastSpeed)) {
 				remove.push(key);
 			} else {			
@@ -509,7 +529,7 @@ Crafty.c("MultiInput", {
 		}	
 		
 		for (key in remove) {
-			delete this._cooloffMap[key];
+			delete this._cooloffMap[remove[key]];
 		}
 	},
 
@@ -557,6 +577,7 @@ Crafty.c('Slider', {
 
 	speedOnPress: null,
 	speedOnRelease: null,
+	speedOnOtherKey: null,
 	
 	_rightVector: new Crafty.math.Vector2D(1,0),
 	_tempVector: new Crafty.math.Vector2D(),
@@ -580,6 +601,7 @@ Crafty.c('Slider', {
 	 	delete this.keys2;
 	 	delete this.speedOnPress;
 	 	delete this.speedOnRelease;
+	 	delete this.speedOnOtherKey;
 	},
 	
 	slide_anchor: function(percent) {
@@ -601,9 +623,10 @@ Crafty.c('Slider', {
 		return this;
 	},
 	
-	slide_setSpeedFunctions: function(speedOnPress, speedOnRelease) {
+	slide_setSpeedFunctions: function(speedOnPress, speedOnRelease, onOtherKey) {
 		this.speedOnPress = speedOnPress;
 		this.speedOnRelease = speedOnRelease;
+		this.speedOnOtherKey = onOtherKey;
 		return this;
 	},
 	
@@ -626,17 +649,11 @@ Crafty.c('Slider', {
 			angle = this._tempVector.x < 0 ? 180 : 0;
 		else
 			angle = Crafty.math.radToDeg(this._rightVector.angleTo(this._tempVector));
-				
-		var props = {};
-		var i = 0;
-		
-		for (i = 0; i < this.keys1.length; ++i)
-			props[this.keys1[i]] = 180+angle;	
-		for (i = 0; i < this.keys2.length; ++i)
-			props[this.keys2[i]] = angle;
 
 		this.multi_clear();
-		this.multi_add(props, this.speedOnPress, this.speedOnRelease);
+		
+		this.multi_add(this.keys2, angle, this.speedOnPress, this.speedOnRelease, this.speedOnOtherKey);
+		this.multi_add(this.keys1, 180+angle, this.speedOnPress, this.speedOnRelease, this.speedOnOtherKey);
 		return this;
 	},
 	

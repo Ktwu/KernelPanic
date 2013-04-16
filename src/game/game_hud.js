@@ -95,7 +95,6 @@ Crafty.c("GameHud", {
 		var keyAngleBlacklist = [];
 		var i = 0;
 		
-		console.log(angles);
 		while (angleBlacklist.length < angles.length
 			&& keyAngleBlacklist.length < KernelPanic.settings.keyList.length) {
 				
@@ -105,7 +104,6 @@ Crafty.c("GameHud", {
 			var angleData = this._gamehud_toClosest(keyData.value, angles, angleBlacklist);
 			
 			if (angleData.value == angles[i]) {
-				console.log("matched " + KernelPanic.settings.keyList[keyData.i]);
 				// Excellent, a matching!
 				this.gamehud_keyMap[KernelPanic.settings.keyList[keyData.i]] = {
 					direction: new Crafty.math.Vector2D(Math.cos(angles[i]), Math.sin(angles[i])),

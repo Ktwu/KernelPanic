@@ -198,7 +198,6 @@ Crafty.c("GameLevel", {
 			i %= this.objDataToLoad.length;
 			
 		if (this.objDataToLoad.length > 1) {
-			console.log(i + " " + secondIndex);
 			this.transitionTo(R.States.graphChange, i);
 			return true;
 		}
@@ -227,10 +226,18 @@ Crafty.c("GameLevel", {
 			});
 	
 			var player = this.currentObj.gamegraph_getCurrentPlayer();			
-			if (player == null || player.centerY() < 0 || player.centerY() > Crafty.canvas._canvas.height) {
+			if (player == null || player.centerY() < 0) {
 				if (player == null)
 					console.log("Why was the player null???");
 				this.trigger(R.Event.Lose);
+			}
+			
+			// If the player is beyond some threshold of our screen, speed up our scrolling
+			if (player.centerY() > Crafty.canvas._canvas.height * (1 - KernelPanic.settings.speedupZoneSize)) {
+				console.log("speedup");
+				this.currentObj.attr({
+					y: this.currentObj.y - player._movement.y
+				});
 			}
 		}
 	},

@@ -37,13 +37,14 @@ Crafty.scene(R.Scene.game, function() {
 	KernelPanic.currentLevel = Crafty.e('GameLevel')
 		.attr({
 			objDataToLoad: [
-				//R.UI.intro,
-				//R.UI.popup_move, level1, 
-				//R.UI.popup_scroll, level2,
-				//R.UI.popup_exec, level3,
-				//level4,
-				//R.UI.popup_mutex, level5,
-				//level6,
+				R.UI.intro,
+				R.UI.popup_move, R.UI.popup_scroll,
+				level1, 
+				level2,
+				R.UI.popup_exec, level3,
+				level4,
+				R.UI.popup_mutex, level5,
+				level6,
 				R.UI.popup_fork, level7,
 				level8,
 				level9
